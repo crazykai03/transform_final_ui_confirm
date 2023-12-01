@@ -3,6 +3,10 @@ from tkinter import *
 from PIL import ImageTk , Image
 import threading
 import time
+
+import os
+import serial
+
 lock_press_time =0
 lock_hold= False
 hold_time =0
@@ -13,7 +17,9 @@ pre_function_time =0
 rf_tran_data = ""
 command =[ord("B"),ord("E"),ord("2"),ord("1"),0]
 
+os.system('sudo chmod 777 /dev/ttyS0')
 
+ser = serial.Serial("/dev/ttyS0",19200,timeout=0.2)
 
 def uppress(event):
     global pre_function_time
@@ -173,21 +179,14 @@ def dimmingpress(event):
     global pre_function_time,hold_status,hold_time
     pre_function_time = time.time()
     canvas1.itemconfig(control_btn, image = dimming_tap)
-    hold_status = True
-    command[4] = 0xD8
-    hold_time = time.time()
+    
 
 def dimmingrelease(event):
     global pre_function_time,hold_status,held_status
 
     pre_function_time = time.time()
     canvas1.itemconfig(control_btn, image=dimming)
-    if held_status != True:
-        command[4] = 0x00
-    else:
-        command[4] = 0xD9
-    hold_status = False
-    held_status = False
+    command[4]=0xB7
 
 def settingpress(event):
     global pre_function_time
@@ -274,9 +273,10 @@ def setting_pop_up_release():
 
 
 def serial_write():
-    global  command
-    print(command)
-    print(bytes(command))
+     global  command
+     #print(command)
+     #print(bytes(command))
+     ser.write(bytes(command))  
 
 
 
@@ -336,7 +336,11 @@ def unbind_btn():
 
     canvas1.tag_unbind(rgb1_btn, '<Button-1>' )
     canvas1.tag_unbind(rgb1_btn, '<ButtonRelease-1>')
-
+    
+    canvas1.tag_unbind(control_btn, '<Button-1>')
+    canvas1.tag_unbind(control_btn, '<ButtonRelease-1>')
+    
+    
 
 
 
@@ -353,6 +357,7 @@ def bind_btn():
 
     canvas1.tag_bind(lock_btn, '<Button-1>', lockpress)
     canvas1.tag_bind(lock_btn, '<ButtonRelease-1>', lockrelease)
+
 
     canvas1.tag_bind(light1_btn, '<Button-1>', light1press)
     canvas1.tag_bind(light1_btn, '<ButtonRelease-1>', light1release)
@@ -385,38 +390,39 @@ def bind_btn():
 
 # Create object
 root = Tk()
+pwd_path ="/home/pi/transform_final_ui_confirm/transformer_final_ui/scissor/"
 
 # Adjust size
 root.geometry("800x480")
 
 # Add image file
-bg = PhotoImage(file="Bg.png")
-logo = PhotoImage(file="Logo.png")
-up= PhotoImage(file="up-default.png")
-down= PhotoImage(file="down-default.png")
-stop = PhotoImage(file="stop-default.png")
+bg = PhotoImage(file=pwd_path+"Bg.png")
+logo = PhotoImage(file=pwd_path+"Logo.png")
+up= PhotoImage(file=pwd_path+"up-default.png")
+down= PhotoImage(file=pwd_path+"down-default.png")
+stop = PhotoImage(file=pwd_path+"stop-default.png")
 
 
-light1= PhotoImage(file="light1-default.png")
-light2= PhotoImage(file="light2-default.png")
-light3 = PhotoImage(file="light3-default.png")
-rgb1= PhotoImage(file="light4-default.png")
-all_light = PhotoImage(file="all-default.png")
+light1= PhotoImage(file=pwd_path+"light1-default.png")
+light2= PhotoImage(file=pwd_path+"light2-default.png")
+light3 = PhotoImage(file=pwd_path+"light3-default.png")
+rgb1= PhotoImage(file=pwd_path+"light4-default.png")
+all_light = PhotoImage(file=pwd_path+"all-default.png")
 
-dimming= PhotoImage(file="control-default.png")
-
-
-
-lock= PhotoImage(file="lock-default.png")
-unlock = PhotoImage(file="unlock-default.png")
-setting = PhotoImage(file="Setting-default.png")
+dimming= PhotoImage(file=pwd_path+"control-default.png")
 
 
-settingbg = PhotoImage(file="settingbg.png")
-settingback = PhotoImage(file="back-default.png")
 
-pair = PhotoImage(file="pair-default.png")
-reset =PhotoImage(file="reset-default.png")
+lock= PhotoImage(file=pwd_path+"lock-default.png")
+unlock = PhotoImage(file=pwd_path+"unlock-default.png")
+setting = PhotoImage(file=pwd_path+"Setting-default.png")
+
+
+settingbg = PhotoImage(file=pwd_path+"settingbg.png")
+settingback = PhotoImage(file=pwd_path+"back-default.png")
+
+pair = PhotoImage(file=pwd_path+"pair-default.png")
+reset =PhotoImage(file=pwd_path+"reset-default.png")
 
 
 
@@ -428,29 +434,29 @@ reset =PhotoImage(file="reset-default.png")
 #option = PhotoImage(file="option.png")
 #------------for tap button--------------------------------
 
-up_tap= PhotoImage(file="up-default.png")
-down_tap= PhotoImage(file="down-tap.png")
+up_tap= PhotoImage(file=pwd_path+"up-tap.png")
+down_tap= PhotoImage(file=pwd_path+"down-tap.png")
 
 
-stop_tap = PhotoImage(file="stop-tap.png")
-light1_tap= PhotoImage(file="light1-tap.png")
-light2_tap= PhotoImage(file="light2-tap.png")
-light3_tap= PhotoImage(file="light3-tap.png")
-rgb1_tap= PhotoImage(file="light4-tap.png")
+stop_tap = PhotoImage(file=pwd_path+"stop-tap.png")
+light1_tap= PhotoImage(file=pwd_path+"light1-tap.png")
+light2_tap= PhotoImage(file=pwd_path+"light2-tap.png")
+light3_tap= PhotoImage(file=pwd_path+"light3-tap.png")
+rgb1_tap= PhotoImage(file=pwd_path+"light4-tap.png")
 
 
 
-dimming_tap= PhotoImage(file="control-tap.png")
-all_light_tap = PhotoImage(file="all-tap.png")
+dimming_tap= PhotoImage(file=pwd_path+"control-tap.png")
+all_light_tap = PhotoImage(file=pwd_path+"all-tap.png")
 
-lock_tap= PhotoImage(file="lock-tap.png")
-unlock_tap= PhotoImage(file = "unlock-tap.png")
+lock_tap= PhotoImage(file=pwd_path+"lock-tap.png")
+unlock_tap= PhotoImage(file = pwd_path+"unlock-tap.png")
 
 
-setting_tap= PhotoImage(file = "Setting-tap.png")
-settingback_tap = PhotoImage(file="back-tap.png")
-pair_tap = PhotoImage(file="pair-tap.png")
-reset_tap = PhotoImage(file="reset-tap.png")
+setting_tap= PhotoImage(file = pwd_path+"Setting-tap.png")
+settingback_tap = PhotoImage(file=pwd_path+"back-tap.png")
+pair_tap = PhotoImage(file=pwd_path+"pair-tap.png")
+reset_tap = PhotoImage(file=pwd_path+"reset-tap.png")
 
 
 #change_tap =  PhotoImage(file="change_tap.png")
