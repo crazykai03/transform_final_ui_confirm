@@ -3,6 +3,9 @@ from tkinter import *
 from PIL import ImageTk , Image
 import threading
 import time
+import os
+import serial
+
 lock_press_time =0
 lock_hold= False
 hold_time =0
@@ -11,9 +14,11 @@ held_status = False
 lock_state = True
 pre_function_time =0
 rf_tran_data = ""
-command =[ord("B"),ord("E"),ord("2"),ord("1"),0]
+command =[ord("B"),ord("E"),ord("5"),ord("1"),0]
 
+os.system('sudo chmod 777 /dev/ttyS0')
 
+ser = serial.Serial("/dev/ttyS0",19200,timeout=0.2)
 
 def t1press(event):
     global pre_function_time
@@ -52,12 +57,12 @@ def t3release(event):
     global pre_function_time
     pre_function_time = time.time()
     canvas1.itemconfig(t3_btn, image=t3)
-    command[4] = 0x03
+    command[4] = 0x05
 
 def t4press(event):
     global pre_function_time
     pre_function_time = time.time()
-    canvas1.itemconfig(t4_btn, image = t4)
+    canvas1.itemconfig(t4_btn, image = t4_tap)
 
 
 
@@ -207,9 +212,10 @@ def setting_pop_up_release():
 
 
 def serial_write():
-    global  command
-    print(command)
-    print(bytes(command))
+     global  command
+     #print(command)
+     #print(bytes(command))
+     ser.write(bytes(command))	
 
 
 
@@ -311,35 +317,35 @@ root = Tk()
 
 # Adjust size
 root.geometry("800x480")
-
+pwd_path ="/home/pi/transform_final_ui_confirm/transformer_final_ui/lift_kitchen/"
 # Add image file
-bg = PhotoImage(file="Bg.png")
-logo = PhotoImage(file="Logo.png")
-t1= PhotoImage(file="t1-default.png")
-t2= PhotoImage(file="t2-default.png")
-t3= PhotoImage(file="t3-default.png")
-t4= PhotoImage(file="t4-default.png")
-stop = PhotoImage(file="stop-default.png")
+bg = PhotoImage(file=pwd_path+"Bg.png")
+logo = PhotoImage(file=pwd_path+"Logo.png")
+t1= PhotoImage(file=pwd_path+"t1-default.png")
+t2= PhotoImage(file=pwd_path+"t2-default.png")
+t3= PhotoImage(file=pwd_path+"t3-default.png")
+t4= PhotoImage(file=pwd_path+"t4-default.png")
+stop = PhotoImage(file=pwd_path+"stop-default.png")
 
 
-light1= PhotoImage(file="light-default.png")
-
-
-
+light1= PhotoImage(file=pwd_path+"light-default.png")
 
 
 
 
-lock= PhotoImage(file="lock-default.png")
-unlock = PhotoImage(file="unlock-default.png")
-setting = PhotoImage(file="Setting-default.png")
 
 
-settingbg = PhotoImage(file="settingbg.png")
-settingback = PhotoImage(file="back-default.png")
 
-pair = PhotoImage(file="pair-default.png")
-reset =PhotoImage(file="reset-default.png")
+lock= PhotoImage(file=pwd_path+"lock-default.png")
+unlock = PhotoImage(file=pwd_path+"unlock-default.png")
+setting = PhotoImage(file=pwd_path+"Setting-default.png")
+
+
+settingbg = PhotoImage(file=pwd_path+"settingbg.png")
+settingback = PhotoImage(file=pwd_path+"back-default.png")
+
+pair = PhotoImage(file=pwd_path+"pair-default.png")
+reset =PhotoImage(file=pwd_path+"reset-default.png")
 
 
 
@@ -351,28 +357,31 @@ reset =PhotoImage(file="reset-default.png")
 #option = PhotoImage(file="option.png")
 #------------for tap button--------------------------------
 
-t1_tap= PhotoImage(file="t1-tap.png")
-t2_tap= PhotoImage(file="t2-tap.png")
-t3_tap= PhotoImage(file="t3-tap.png")
-t4_tap= PhotoImage(file="t4-tap.png")
 
 
 
-stop_tap = PhotoImage(file="stop-tap.png")
-
-light1_tap= PhotoImage(file="light-tap.png")
-
-
-
-
-lock_tap= PhotoImage(file="lock-tap.png")
-unlock_tap= PhotoImage(file = "unlock-tap.png")
+t1_tap= PhotoImage(file=pwd_path+"t1-tap.png")
+t2_tap= PhotoImage(file=pwd_path+"t2-tap.png")
+t3_tap= PhotoImage(file=pwd_path+"t3-tap.png")
+t4_tap= PhotoImage(file=pwd_path+"t4-tap.png")
 
 
-setting_tap= PhotoImage(file = "Setting-tap.png")
-settingback_tap = PhotoImage(file="back-tap.png")
-pair_tap = PhotoImage(file="pair-tap.png")
-reset_tap = PhotoImage(file="reset-tap.png")
+
+stop_tap = PhotoImage(file=pwd_path+"stop-tap.png")
+
+light1_tap= PhotoImage(file=pwd_path+"light-tap.png")
+
+
+
+
+lock_tap= PhotoImage(file=pwd_path+"lock-tap.png")
+unlock_tap= PhotoImage(file = pwd_path+"unlock-tap.png")
+
+
+setting_tap= PhotoImage(file = pwd_path+"Setting-tap.png")
+settingback_tap = PhotoImage(file=pwd_path+"back-tap.png")
+pair_tap = PhotoImage(file=pwd_path+"pair-tap.png")
+reset_tap = PhotoImage(file=pwd_path+"reset-tap.png")
 
 
 #change_tap =  PhotoImage(file="change_tap.png")

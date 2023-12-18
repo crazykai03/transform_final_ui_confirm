@@ -3,7 +3,6 @@ from tkinter import *
 from PIL import ImageTk , Image
 import threading
 import time
-
 import os
 import serial
 
@@ -15,7 +14,7 @@ held_status = False
 lock_state = True
 pre_function_time =0
 rf_tran_data = ""
-command =[ord("B"),ord("E"),ord("2"),ord("1"),0]
+command =[ord("B"),ord("E"),ord("3"),ord("1"),0]
 
 os.system('sudo chmod 777 /dev/ttyS0')
 
@@ -47,7 +46,6 @@ def downrelease(event):
         pre_function_time = time.time()
         canvas1.itemconfig(down_btn, image=down)
         command[4] = 0x02
-
 
 def stoppress(event):
     global pre_function_time
@@ -123,23 +121,16 @@ def light2release(event):
 def light3press(event):
     global pre_function_time,hold_status,hold_time
     pre_function_time = time.time()
-    canvas1.itemconfig(light3_btn, image = light3_tap)
-    hold_status = True
-    command[4] = 0x82
-    hold_time = time.time()
+    canvas1.itemconfig(light3_btn, image = sofa_tap)
+
 
 
 def light3release(event):
     global pre_function_time,hold_status,held_status
 
     pre_function_time = time.time()
-    canvas1.itemconfig(light3_btn, image=light3)
-    if held_status != True:
-        command[4] = 0xAA
-    else:
-        command[4] = 0x8C
-    hold_status = False
-    held_status = False
+    canvas1.itemconfig(light3_btn, image=sofa)
+    command[4]=0x04
 
 def alllightpress(event):
     global pre_function_time
@@ -153,40 +144,7 @@ def alllightrelease(event):
     canvas1.itemconfig(all_light_btn, image=all_light)
     command[4] = 0xD7
 
-def rgbpress(event):
-    global pre_function_time,hold_status,hold_time
-    pre_function_time = time.time()
-    canvas1.itemconfig(rgb1_btn, image = rgb1_tap)
-    hold_status = True
-    command[4] = 0xCB
-    hold_time = time.time()
 
-
-def rgbrelease(event):
-    global pre_function_time,hold_status,held_status
-
-    pre_function_time = time.time()
-    canvas1.itemconfig(rgb1_btn, image=rgb1)
-    if held_status != True:
-        command[4] = 0xC6
-    else:
-        command[4] = 0xD0
-    hold_status = False
-    held_status = False
-
-
-def dimmingpress(event):
-    global pre_function_time,hold_status,hold_time
-    pre_function_time = time.time()
-    canvas1.itemconfig(control_btn, image = dimming_tap)
-    
-
-def dimmingrelease(event):
-    global pre_function_time,hold_status,held_status
-
-    pre_function_time = time.time()
-    canvas1.itemconfig(control_btn, image=dimming)
-    command[4]=0xB7
 
 def settingpress(event):
     global pre_function_time
@@ -200,6 +158,7 @@ def settingpress(event):
 
 
 #---------canvas 2
+
 def settingbackpress(event):
     global pre_function_time
     pre_function_time = time.time()
@@ -267,11 +226,6 @@ def setting_pop_up_release():
 
 
 
-
-
-
-
-
 def serial_write():
      global  command
      #print(command)
@@ -322,6 +276,8 @@ def unbind_btn():
     canvas1.tag_unbind(down_btn, '<ButtonRelease-1>' )
 
 
+
+
     canvas1.tag_unbind(light1_btn, '<Button-1>' )
     canvas1.tag_unbind(light1_btn, '<ButtonRelease-1>' )
 
@@ -334,13 +290,7 @@ def unbind_btn():
     canvas1.tag_unbind(all_light_btn, '<Button-1>' )
     canvas1.tag_unbind(all_light_btn, '<ButtonRelease-1>' )
 
-    canvas1.tag_unbind(rgb1_btn, '<Button-1>' )
-    canvas1.tag_unbind(rgb1_btn, '<ButtonRelease-1>')
-    
-    canvas1.tag_unbind(control_btn, '<Button-1>')
-    canvas1.tag_unbind(control_btn, '<ButtonRelease-1>')
-    
-    
+
 
 
 
@@ -358,7 +308,6 @@ def bind_btn():
     canvas1.tag_bind(lock_btn, '<Button-1>', lockpress)
     canvas1.tag_bind(lock_btn, '<ButtonRelease-1>', lockrelease)
 
-
     canvas1.tag_bind(light1_btn, '<Button-1>', light1press)
     canvas1.tag_bind(light1_btn, '<ButtonRelease-1>', light1release)
 
@@ -370,51 +319,32 @@ def bind_btn():
 
     canvas1.tag_bind(all_light_btn, '<Button-1>', alllightpress)
     canvas1.tag_bind(all_light_btn, '<ButtonRelease-1>', alllightrelease)
-
-    canvas1.tag_bind(rgb1_btn, '<Button-1>', rgbpress)
-    canvas1.tag_bind(rgb1_btn, '<ButtonRelease-1>', rgbrelease)
-
-    canvas1.tag_bind(control_btn, '<Button-1>', dimmingpress)
-    canvas1.tag_bind(control_btn, '<ButtonRelease-1>', dimmingrelease)
-
     canvas1.tag_bind(setting_btn, '<Button-1>', settingpress)
-
-
-
-
-
-#------canvas 2 -----------------
-
-
 
 
 # Create object
 root = Tk()
-pwd_path ="/home/pi/transform_final_ui_confirm/transformer_final_ui/scissor/"
 
 # Adjust size
 root.geometry("800x480")
-
+pwd_path ="/home/pi/transform_final_ui_confirm/transformer_final_ui/lift_sofa/"
 # Add image file
 bg = PhotoImage(file=pwd_path+"Bg.png")
 logo = PhotoImage(file=pwd_path+"Logo.png")
-up= PhotoImage(file=pwd_path+"up-default.png")
-down= PhotoImage(file=pwd_path+"down-default.png")
+up= PhotoImage(file=pwd_path+"bed-default.png")
+down= PhotoImage(file=pwd_path+"party-default.png")
 stop = PhotoImage(file=pwd_path+"stop-default.png")
-
-
 light1= PhotoImage(file=pwd_path+"light1-default.png")
 light2= PhotoImage(file=pwd_path+"light2-default.png")
-light3 = PhotoImage(file=pwd_path+"light3-default.png")
-rgb1= PhotoImage(file=pwd_path+"light4-default.png")
-all_light = PhotoImage(file=pwd_path+"all-default.png")
-
-dimming= PhotoImage(file=pwd_path+"control-default.png")
-
-
-
+sofa= PhotoImage(file=pwd_path+"sofa-default.png")
+#dimming= PhotoImage(file="control-default.png")
+all_light = PhotoImage(file=pwd_path+"allLight-default.png")
+#pop_up_bg = PhotoImage(file="Popup-Bg.png")
+#change =  PhotoImage(file="change_btn.png")
+#confirm =  PhotoImage(file="confirm_btn.png")
 lock= PhotoImage(file=pwd_path+"lock-default.png")
 unlock = PhotoImage(file=pwd_path+"unlock-default.png")
+
 setting = PhotoImage(file=pwd_path+"Setting-default.png")
 
 
@@ -425,44 +355,27 @@ pair = PhotoImage(file=pwd_path+"pair-default.png")
 reset =PhotoImage(file=pwd_path+"reset-default.png")
 
 
-
-
-#pop_up_bg = PhotoImage(file="Popup-Bg.png")
-#change =  PhotoImage(file="change_btn.png")
-#confirm =  PhotoImage(file="confirm_btn.png")
-
 #option = PhotoImage(file="option.png")
 #------------for tap button--------------------------------
 
-up_tap= PhotoImage(file=pwd_path+"up-tap.png")
-down_tap= PhotoImage(file=pwd_path+"down-tap.png")
-
-
+up_tap= PhotoImage(file=pwd_path+"bed-tap.png")
+down_tap= PhotoImage(file=pwd_path+"party-tap.png")
 stop_tap = PhotoImage(file=pwd_path+"stop-tap.png")
 light1_tap= PhotoImage(file=pwd_path+"light1-tap.png")
 light2_tap= PhotoImage(file=pwd_path+"light2-tap.png")
-light3_tap= PhotoImage(file=pwd_path+"light3-tap.png")
-rgb1_tap= PhotoImage(file=pwd_path+"light4-tap.png")
-
-
-
-dimming_tap= PhotoImage(file=pwd_path+"control-tap.png")
-all_light_tap = PhotoImage(file=pwd_path+"all-tap.png")
-
+sofa_tap= PhotoImage(file=pwd_path+"sofa-tap.png")
+#dimming_tap= PhotoImage(file="control-tap.png")
+all_light_tap = PhotoImage(file=pwd_path+"allLight-tap.png")
 lock_tap= PhotoImage(file=pwd_path+"lock-tap.png")
 unlock_tap= PhotoImage(file = pwd_path+"unlock-tap.png")
-
+#change_tap =  PhotoImage(file="change_tap.png")
+#confirm_tap =  PhotoImage(file="confirm_tap.png")
+#all_dark = PhotoImage(file = "all_dark_bg.png")
 
 setting_tap= PhotoImage(file = pwd_path+"Setting-tap.png")
 settingback_tap = PhotoImage(file=pwd_path+"back-tap.png")
 pair_tap = PhotoImage(file=pwd_path+"pair-tap.png")
 reset_tap = PhotoImage(file=pwd_path+"reset-tap.png")
-
-
-#change_tap =  PhotoImage(file="change_tap.png")
-#confirm_tap =  PhotoImage(file="confirm_tap.png")
-#all_dark = PhotoImage(file = "all_dark_bg.png")
-
 
 
 
@@ -494,24 +407,16 @@ offset_y = 87
 # Display Buttons
 bg_img_all = canvas1.create_image(400,240,image=bg)
 logo_btn = canvas1.create_image(24+186,24+28,image=logo)
+up_btn = canvas1.create_image(24+offset_x,100+offset_y,image=up)
+down_btn = canvas1.create_image(326+offset_x,100+offset_y,image=down)
+stop_btn =  canvas1.create_image(24+148,282+87,image=stop)
+lock_btn =  canvas1.create_image(326+offset_x,282+offset_y,image=lock)
 
-
-light1_btn =  canvas1.create_image(24+offset_x,100+offset_y,image=light1)
-light2_btn =  canvas1.create_image(176+offset_x,100+offset_y,image=light2)
-light3_btn =  canvas1.create_image(328+offset_x,100+offset_y,image=light3)
-
-
-up_btn = canvas1.create_image(480+72,100+41,image=up)
-down_btn = canvas1.create_image(480+72,191+41,image=down)
-
-stop_btn =  canvas1.create_image(480+148,282+87,image=stop)
-lock_btn =  canvas1.create_image(632+offset_x,100+offset_y,image=lock)
-
-
-rgb1_btn =  canvas1.create_image(328+72,282+41,image=rgb1)
-control_btn =  canvas1.create_image(328+72,373+41,image=dimming)
-
-all_light_btn =  canvas1.create_image(24+148,282+87,image=all_light)
+light1_btn =  canvas1.create_image(480+72,100+87,image=light1)
+light2_btn =  canvas1.create_image(632+72,100+87,image=light2)
+light3_btn =  canvas1.create_image(160+offset_y,100+offset_y,image=sofa)
+#rgb1_btn =  canvas1.create_image(616+offset_y,100+offset_y,image=dimming)
+all_light_btn =  canvas1.create_image(480+148,282+87,image=all_light)
 setting_btn =  canvas1.create_image(14+748,14+52,image=setting)
 #option_btn =  canvas1.create_image(480+offset_y,185+offset_y,image=option)
 
@@ -519,13 +424,15 @@ setting_btn =  canvas1.create_image(14+748,14+52,image=setting)
 
 
 #------canvas 2 -----------------
+#bg_img_dark = canvas2.create_image(400,240,image=all_dark)
+#pop_up_background =  canvas2.create_image(176+224,16+224,image=pop_up_bg)
+#change_btn =  canvas2.create_image(400,220,image=change)
+#confirm_btn =  canvas2.create_image(400,220+170,image=confirm)
+
 settingbg_pop = canvas2.create_image(324+76,170+70,image=settingbg)
 settingback_btn = canvas2.create_image(324+76,290+70,image=settingback)
 pair_btn = canvas2.create_image(172+76,154+70,image=pair)
 reset_btn = canvas2.create_image(476+76,154+70,image=reset)
-#pop_up_background =  canvas2.create_image(176+224,16+224,image=pop_up_bg)
-#change_btn =  canvas2.create_image(400,220,image=change)
-#confirm_btn =  canvas2.create_image(400,220+170,image=confirm)
 
 
 
