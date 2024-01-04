@@ -39,13 +39,13 @@ def sleep_mode_release(event):
 def table_mode(event):
         global pre_function_time
         pre_function_time = time.time()
-        canvas1.itemconfig(table, image=table_tap)
+        canvas1.itemconfig(table_btn, image=table_tap)
 
 
 def table_mode_release(event):
         global pre_function_time
         pre_function_time = time.time()
-        canvas1.itemconfig(table, image=table)
+        canvas1.itemconfig(table_btn, image=table)
         command[4] = 0x02
 
 def uppress(event):
@@ -80,7 +80,7 @@ def stoppress(event):
     global pre_function_time
     pre_function_time = time.time()
     canvas1.itemconfig(stop_btn, image = stop_tap)
-    command[4] = 0x03
+    command[4] = 0x07
 
 def stoprelease(event):
     global pre_function_time
@@ -296,6 +296,12 @@ def unbind_btn():
 
     canvas1.tag_unbind(light2_btn, '<Button-1>' )
     canvas1.tag_unbind(light2_btn, '<ButtonRelease-1>' )
+
+    canvas1.tag_unbind(table_btn, '<Button-1>' )
+    canvas1.tag_unbind(table_btn, '<ButtonRelease-1>' )
+
+    canvas1.tag_unbind(sleep_btn, '<Button-1>' )
+    canvas1.tag_unbind(sleep_btn, '<ButtonRelease-1>' )
 
 
 
