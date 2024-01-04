@@ -1,10 +1,11 @@
 # Import module
 from tkinter import *
-import sys
 from PIL import ImageTk , Image
-import importlib
 import threading
 import time
+
+import os
+import serial
 
 lock_press_time =0
 lock_hold= False
@@ -15,6 +16,10 @@ lock_state = True
 pre_function_time =0
 rf_tran_data = ""
 command =[ord("B"),ord("E"),ord("2"),ord("1"),0]
+
+os.system('sudo chmod 777 /dev/ttyS0')
+
+ser = serial.Serial("/dev/ttyS0",19200,timeout=0.2)
 
 def sleep_mode(event):
     global pre_function_time
@@ -339,32 +344,34 @@ def bind_btn():
 # Create object
 root = Tk()
 
+pwd_path ="/home/pi/transform_final_ui_confirm/transformer_final_ui/two_bed_table/"
+
 # Adjust size
 root.geometry("800x480")
 
 # Add image file
-bg = PhotoImage(file="Bg.png")
-logo = PhotoImage(file="Logo.png")
+bg = PhotoImage(file=pwd_path+"Bg.png")
+logo = PhotoImage(file=pwd_path+"Logo.png")
 
-up= PhotoImage(file="up-default.png")
-down= PhotoImage(file="down-default.png")
-stop = PhotoImage(file="stop-default.png")
-light1= PhotoImage(file="light1-default.png")
-light2= PhotoImage(file="light2-default.png")
-sleep = PhotoImage(file="bed-default.png")
-table = PhotoImage(file="desk-default.png")
+up= PhotoImage(file=pwd_path+"up-default.png")
+down= PhotoImage(file=pwd_path+"down-default.png")
+stop = PhotoImage(file=pwd_path+"stop-default.png")
+light1= PhotoImage(file=pwd_path+"light1-default.png")
+light2= PhotoImage(file=pwd_path+"light2-default.png")
+sleep = PhotoImage(file=pwd_path+"bed-default.png")
+table = PhotoImage(file=pwd_path+"desk-default.png")
 
-lock= PhotoImage(file="lock-default.png")
-unlock = PhotoImage(file="unlock-default.png")
+lock= PhotoImage(file=pwd_path+"lock-default.png")
+unlock = PhotoImage(file=pwd_path+"unlock-default.png")
 
-setting = PhotoImage(file="Setting-default.png")
+setting = PhotoImage(file=pwd_path+"Setting-default.png")
 
 
-settingbg = PhotoImage(file="settingbg.png")
-settingback = PhotoImage(file="back-default.png")
+settingbg = PhotoImage(file=pwd_path+"settingbg.png")
+settingback = PhotoImage(file=pwd_path+"back-default.png")
 
-pair = PhotoImage(file="pair-default.png")
-reset =PhotoImage(file="reset-default.png")
+pair = PhotoImage(file=pwd_path+"pair-default.png")
+reset =PhotoImage(file=pwd_path+"reset-default.png")
 
 
 
@@ -376,30 +383,30 @@ reset =PhotoImage(file="reset-default.png")
 #option = PhotoImage(file="option.png")
 #------------for tap button--------------------------------
 
-up_tap= PhotoImage(file="up-tap.png")
-down_tap= PhotoImage(file="down-tap.png")
+up_tap= PhotoImage(file=pwd_path+"up-tap.png")
+down_tap= PhotoImage(file=pwd_path+"down-tap.png")
 
 
 
-stop_tap = PhotoImage(file="stop-tap.png")
-light1_tap= PhotoImage(file="light1-tap.png")
-light2_tap= PhotoImage(file="light2-tap.png")
-sleep_tap = PhotoImage(file="bed-tap.png")
-table_tap = PhotoImage(file="desk-tap.png")
+stop_tap = PhotoImage(file=pwd_path+"stop-tap.png")
+light1_tap= PhotoImage(file=pwd_path+"light1-tap.png")
+light2_tap= PhotoImage(file=pwd_path+"light2-tap.png")
+sleep_tap = PhotoImage(file=pwd_path+"bed-tap.png")
+table_tap = PhotoImage(file=pwd_path+"desk-tap.png")
 
 
 
 
 
 
-lock_tap= PhotoImage(file="lock-tap.png")
-unlock_tap= PhotoImage(file = "unlock-tap.png")
+lock_tap= PhotoImage(file=pwd_path+"lock-tap.png")
+unlock_tap= PhotoImage(file = pwd_path+"unlock-tap.png")
 
 
-setting_tap= PhotoImage(file = "Setting-tap.png")
-settingback_tap = PhotoImage(file="back-tap.png")
-pair_tap = PhotoImage(file="pair-tap.png")
-reset_tap = PhotoImage(file="reset-tap.png")
+setting_tap= PhotoImage(file = pwd_path+"Setting-tap.png")
+settingback_tap = PhotoImage(file=pwd_path+"back-tap.png")
+pair_tap = PhotoImage(file=pwd_path+"pair-tap.png")
+reset_tap = PhotoImage(file=pwd_path+"reset-tap.png")
 
 
 #change_tap =  PhotoImage(file="change_tap.png")
