@@ -15,7 +15,7 @@ held_status = False
 lock_state = True
 pre_function_time = 0
 rf_tran_data = ""
-command = [ord("B"), ord("E"), ord("7"), ord("1"), 0]
+command = [ord("B"), ord("E"), ord("6"), ord("1"), 0]
 
 os.system('sudo chmod 777 /dev/ttyS0')
 
