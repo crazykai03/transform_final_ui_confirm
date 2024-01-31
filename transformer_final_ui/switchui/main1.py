@@ -3,7 +3,12 @@ import RPi.GPIO as GPIO
 import time
 
 killpython_cmd = 'pkill -9 -f main.py'
-ui_cmd =['python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/lift_kitchen/main.py', 'python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/lift_sofa/main.py','python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/scissor/main.py','python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/two_bed_table/main.py','python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/wifi_input/main.py']
+ui_cmd =['python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/lift_kitchen/main.py', \
+'python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/lift_sofa/main.py',\
+'python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/scissor/main.py',\
+'python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/two_bed_table/main.py',\
+'python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/VR/main.py',\
+'python3 /home/pi/transform_final_ui_confirm/transformer_final_ui/wifi_input/main.py']
 
 
 
@@ -19,7 +24,7 @@ ui_index = 0
 def button_handler(pin):
     global ui_index
     ui_index=ui_index+1
-    if ui_index >4:
+    if ui_index >5:
         ui_index=0
     f = open("/home/pi/transform_final_ui_confirm/transformer_final_ui/switchui/store.txt", "w")
     f.write(str(ui_index))
