@@ -11,9 +11,10 @@ from tkinter import messagebox
 import cv2
 from PIL import Image, ImageTk
 
-global ser , uart_receive
+global ser
 import pandas as pd
 
+uart_receive = []
 angle_num_aj=""
 height_num_aj=""
 seperate_num_aj=""
@@ -27,13 +28,14 @@ process_list=[]
 circle_counter=0
 total_circle=0
 
-whole_circle_counter =0
-total_whole_circle_counter=0
+whole_circle_counter =1
+total_whole_circle_counter=1
+path=""
 
 auto_processing=False
 camera_fixed = False
 
-command =[0x00] * 11
+command =[]
 
 processingc = False
 processingr=False
@@ -44,6 +46,9 @@ excel_process =False
 
 def insert_processing_list():
     global process_list,whole_circle_counter,total_whole_circle_counter
+    auto_angle_num.config(state=NORMAL)
+    auto_height_num.config(state=NORMAL)
+    auto_angle_separate.config(state=NORMAL)
     print(whole_circle_counter)
     auto_angle_num.delete(0,tk.END)
     auto_height_num.delete(0, tk.END)
@@ -55,8 +60,10 @@ def insert_processing_list():
     auto_angle_separate.delete(0, tk.END)
 
     auto_angle_separate.insert(0,process_list[whole_circle_counter][2])
+    auto_angle_num.config(state=DISABLED)
+    auto_height_num.config(state=DISABLED)
+    auto_angle_separate.config(state=DISABLED)
 
-    canvas2.itemconfig(remain_circle, text=str(whole_circle_counter)+"/"+str(total_whole_circle_counter), fill="white")
 
 
 
@@ -136,7 +143,8 @@ def serial_write():
     try:
         print(command)
         ser.write(bytes(command))
-        command = [0x00] * 11
+        command.clear()
+
         threading.Timer(0.3, mylog).start()
 
     except:
@@ -150,13 +158,14 @@ def serial_write():
 
 def reset_rotate_transmit():
     global processingr
-    command[0] = ord("R")
-    command[1] = ord("E")
-    command[2] = ord("E")
-    command[3] = ord("S")
-    command[4] = ord("E")
-    command[5] = ord("T")
-    command[6] = ord("R")
+    command.append(ord("R"))
+    command.append(ord("E"))
+    command.append(ord("E"))
+    command.append(ord("S"))
+    command.append(ord("E"))
+    command.append(ord("T"))
+    command.append(ord("R"))
+    command.append(ord("\n"))
     processingr=True
 
     serial_write()
@@ -164,24 +173,26 @@ def reset_rotate_transmit():
 
 def reset_camera_transmit():
     global processingc
-    command[0]=ord("3")
-    command[1]=ord("0")
-    command[1]=ord("R")
-    command[2] = ord("E")
-    command[3] = ord("E")
-    command[4] = ord("S")
-    command[5] = ord("E")
-    command[6] = ord("T")
-    command[7] = ord("C")
+    command.append(ord("3"))
+    command.append(ord("0"))
+    command.append(ord("R"))
+    command.append(ord("E"))
+    command.append(ord("E"))
+    command.append(ord("S"))
+    command.append(ord("E"))
+    command.append(ord("T"))
+    command.append(ord("C"))
+    command.append(ord("\n"))
     processingc = True
     serial_write()
 
 
 
 def start_auto_transmit():
-    global auto_processing,camera_fixed,excel_process
-    if excel_process==True:
-        insert_processing_list()
+    global auto_processing,camera_fixed,excel_process,ser
+
+   # if excel_process==True:
+        #insert_processing_list()
 
     if auto_angle_separate.get()=="":
         messagebox.showinfo("錯誤", "數值有誤,運行取消")
@@ -192,17 +203,18 @@ def start_auto_transmit():
     else:
 
         auto_processing_auto_fill()
-        command[0] = ord("3")
-        command[1] = ord("0")
-        command[2] = ord("A")
-        command[3] = ord(auto_angle_num_aj[0])
-        command[4] = ord(auto_angle_num_aj[1])
-        command[5] = ord(auto_angle_num_aj[2])
-        command[6] = ord("H")
-        command[7] = ord(auto_height_num_aj[0])
-        command[8] = ord(auto_height_num_aj[1])
-        command[9] = ord(auto_height_num_aj[2])
-        command[10] = ord(auto_height_num_aj[3])
+        command.append(ord("3"))
+        command.append(ord("0"))
+        command.append(ord("A"))
+        command.append(ord(auto_angle_num_aj[0]))
+        command.append(ord(auto_angle_num_aj[1]))
+        command.append(ord(auto_angle_num_aj[2]))
+        command.append(ord("H"))
+        command.append(ord(auto_height_num_aj[0]))
+        command.append(ord(auto_height_num_aj[1]))
+        command.append(ord(auto_height_num_aj[2]))
+        command.append(ord(auto_height_num_aj[3]))
+        command.append(ord("\n"))
 
 
         auto_processing=True
@@ -212,15 +224,17 @@ def start_auto_transmit():
 
 def fiexed_camera_auto_transmit():
     global circle_counter,auto_processing,excel_process
-    if excel_process==True:
-        insert_processing_list()
+
+    #if excel_process==True:
+        #insert_processing_list()
     auto_processing_auto_fill()
-    command[0]=ord("3")
-    command[1] = ord("1")
-    command[2] = ord("R")
-    command[3] = ord(auto_seperate_num_aj[0])
-    command[4] = ord(auto_seperate_num_aj[1])
-    command[5] = ord(auto_seperate_num_aj[2])
+    command.append(ord("3"))
+    command.append(ord("1"))
+    command.append(ord("R"))
+    command.append(ord(auto_seperate_num_aj[0]))
+    command.append(ord(auto_seperate_num_aj[1]))
+    command.append(ord(auto_seperate_num_aj[2]))
+    command.append(ord("\n"))
     if auto_angle_separate.get()=="":
         messagebox.showinfo("錯誤", "數值有誤,運行取消")
         auto_processing = False
@@ -236,17 +250,18 @@ def camera_transmit():
     print("hello")
     value_auto_fill()
 
-    command[0]=ord("3")
-    command[1]=ord("0")
-    command[2]=ord("A")
-    command[3] = ord(angle_num_aj[0])
-    command[4] = ord(angle_num_aj[1])
-    command[5] = ord(angle_num_aj[2])
-    command[6] = ord("H")
-    command[7] = ord(height_num_aj[0])
-    command[8] = ord(height_num_aj[1])
-    command[9] = ord(height_num_aj[2])
-    command[10] = ord(height_num_aj[3])
+    command.append(ord("3"))
+    command.append(ord("0"))
+    command.append(ord("A"))
+    command.append(ord(angle_num_aj[0]))
+    command.append(ord(angle_num_aj[1]))
+    command.append(ord(angle_num_aj[2]))
+    command.append(ord("H"))
+    command.append(ord(height_num_aj[0]))
+    command.append(ord(height_num_aj[1]))
+    command.append(ord(height_num_aj[2]))
+    command.append(ord(height_num_aj[3]))
+    command.append(ord("\n"))
     print(command)
     processingc=True
     camera_fixed = False
@@ -256,12 +271,13 @@ def rotate_transmit():
     global processingr, camera_fixed
     value_auto_fill()
 
-    command[0]=ord("3")
-    command[1]=ord("1")
-    command[2]=ord("R")
-    command[3] = ord(seperate_num_aj[0])
-    command[4] = ord(seperate_num_aj[1])
-    command[5] = ord(seperate_num_aj[2])
+    command.append(ord("3"))
+    command.append(ord("1"))
+    command.append(ord("R"))
+    command.append(ord(seperate_num_aj[0]))
+    command.append(ord(seperate_num_aj[1]))
+    command.append(ord(seperate_num_aj[2]))
+    command.append(ord("\n"))
 
 
     processingr=True
@@ -296,7 +312,7 @@ def on_select(event=None):
 
 
 def load_excel_file():
-    global workbook,total_whole_circle_counter,excel_process,whole_circle_counter
+    global workbook,total_whole_circle_counter,excel_process,whole_circle_counter,path,process_list
 
     filepath = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xlsx")])
 
@@ -311,11 +327,43 @@ def load_excel_file():
         total_whole_circle_counter = len(process_list[0])
         whole_circle_counter=0
         print(total_whole_circle_counter)
-        canvas2.create_text(60, 85, text="檔案名稱 :", fill="white", font=('Helvetica 15 bold'))
-        canvas2.create_text(120, 85, text=path.name, fill="white",anchor="w", font=('Helvetica 12 bold'))
+
+        canvas2.itemconfig(file_label, text=path.name, fill="white")
         excel_process=True
+        insert_processing_list()
+
     except:
         print("no")
+
+def reload_excel():
+    global workbook,total_whole_circle_counter,excel_process,whole_circle_counter,path,process_list
+    try:
+
+
+        df = pd.read_excel(path)
+        for index, row in df.iterrows():
+            process_list.append(row.to_list())
+        print(process_list)
+        total_whole_circle_counter = len(process_list[0])
+        whole_circle_counter = 0
+        print(total_whole_circle_counter)
+        insert_processing_list()
+
+    except:
+        print("no")
+
+def remove_excel_file():
+    global process_list,path,total_whole_circle_counter,circle_counter,total_circle,whole_circle_counter,auto_processing
+    print("remove")
+    path=""
+    circle_counter = 0
+    total_circle = 0
+    whole_circle_counter = 1
+    total_whole_circle_counter = 1
+    process_list=[]
+    auto_processing=False
+    canvas2.itemconfig(file_label, text="", fill="white")
+    enable_wdiget()
 
 
 
@@ -347,6 +395,12 @@ def ang_callback(input):
         return True
     else:
         return False
+def response_OK():
+    command.append(ord("O"))
+    command.append(ord("K"))
+    command.append(ord("\n"))
+    serial_write()
+
 def disable_wdiget():
     global circle_counter
     canvas1.itemconfig(status_label, text="進行中", fill="red")
@@ -359,13 +413,18 @@ def disable_wdiget():
     camera_zero_btn.config(state=DISABLED)
     auto_start_btn.config(state=DISABLED)
 
-    #auto_angle_num.config(state=DISABLED)
-    #auto_height_num.config(state=DISABLED)
-    #auto_angle_separate.config(state=DISABLED)
+    auto_angle_num.config(state=DISABLED)
+    auto_height_num.config(state=DISABLED)
+    auto_angle_separate.config(state=DISABLED)
 
     if auto_processing==True:
+        auto_angle_separate.config(state=NORMAL)
         canvas2.itemconfig(remain_speerate_circle, text=str(circle_counter)+"/"+str(int(auto_angle_separate.get())), fill="white")
         canvas2.itemconfig(auto_status_label, text="進行中", fill="red")
+        canvas2.itemconfig(remain_circle, text=str(whole_circle_counter) + "/" + str(total_whole_circle_counter),
+                           fill="white")
+        auto_angle_separate.config(state=DISABLED)
+
 def enable_wdiget():
     canvas1.itemconfig(status_label, text="完成", fill="green")
     angle_num.config(state=NORMAL)
@@ -382,42 +441,65 @@ def enable_wdiget():
     canvas2.itemconfig(remain_speerate_circle, text= "0/0" ,
                        fill="white")
     canvas2.itemconfig(auto_status_label, text="空置中", fill="green")
+    canvas2.itemconfig(remain_speerate_circle, text=str(circle_counter) + "/" + str(int(auto_angle_separate.get())),
+                       fill="white")
+    canvas2.itemconfig(remain_circle, text=str(whole_circle_counter) + "/" + str(total_whole_circle_counter),
+                       fill="white")
 
 def mylog():
     global ser ,uart_receive , processingc,processingr ,circle_counter,camera_fixed,auto_processing,whole_circle_counter,total_whole_circle_counter,excel_process
     #print("reading")
     disable_wdiget()
 
-    while ser.in_waiting:  # Or: while ser.inWaiting():
-        uart_receive = ser.readline().decode('ascii').strip()
-        #print(uart_receive)
-        if uart_receive == 'c' and camera_fixed==False:
-            if auto_processing==True:
+    while ser.inWaiting():  # Or: while ser.inWaiting():
 
-                camera_fixed=True
-                fiexed_camera_auto_transmit()
+        uart_receive = ser.readline()
+        uart_receive=uart_receive.decode('UTF-8').strip()
+        print(uart_receive)
 
-            elif processingc==True:
-                processingc=False
-                print("finish")
-        if uart_receive=="r" and camera_fixed==True:
-            if auto_processing==True:
-                circle_counter = circle_counter + 1
-                fiexed_camera_auto_transmit()
+        if uart_receive != "":
+            if uart_receive == 'c' and camera_fixed==False:
+                response_OK()
+                if auto_processing==True:
+                    print("auto_start")
+                    camera_fixed=True
+                    fiexed_camera_auto_transmit()
 
-            elif processingr==True:
-                processingr=False
-        if auto_processing == True:
-            if circle_counter >=  int(auto_angle_separate.get()):
-                print("plus one")
-                if excel_process == True and whole_circle_counter <total_whole_circle_counter-1:
-                    circle_counter = 0
-                    whole_circle_counter=whole_circle_counter+1
-                    start_auto_transmit()
+                elif processingc==True:
+                    processingc=False
+                    print("finish")
 
-                else:
-                    auto_processing=False
-                    circle_counter=0
+            if uart_receive=="r" and camera_fixed==True:
+                response_OK()
+
+                if auto_processing==True :
+                    if circle_counter < int(auto_angle_separate.get()):
+                        circle_counter = circle_counter + 1
+                        fiexed_camera_auto_transmit()
+
+                    elif whole_circle_counter<total_whole_circle_counter-1:
+                            print("whole counter = ")
+                            print(whole_circle_counter)
+                            circle_counter=0
+                            whole_circle_counter=whole_circle_counter+1
+                            insert_processing_list()
+                            start_auto_transmit()
+                    else:
+                        auto_processing = False
+                        whole_circle_counter = 0
+                        circle_counter = 0
+                        reload_excel()
+
+
+
+
+                elif processingr==True:
+                    processingr=False
+
+
+
+
+
 
     if processingc == False and processingr==False and auto_processing==False:
 
@@ -461,8 +543,7 @@ canvas2 = Canvas(root, width=400,
 comlable = ttk.Label(root, text="COM", style="Test.TLabel")
 comlable.place(x=275,y=1)
 
-camlabel = ttk.Label(root,)
-camlabel.place(x=400,y=20)
+
 
 box = ttk.Combobox(root, values=serial.tools.list_ports.comports())
 
@@ -512,7 +593,7 @@ camera_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機
 zero_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='轉盤零位重置', command=reset_rotate_transmit)
 camera_zero_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機零位重置', command=reset_camera_transmit)
 excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='加載進程', command=load_excel_file)
-remove_excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='刪除加載', command=load_excel_file)
+remove_excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='刪除加載', command=remove_excel_file)
 auto_start_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='啟動自動拍攝', command=start_auto_transmit)
 
 
@@ -551,6 +632,8 @@ remain_circle = canvas2.create_text(140,180,text="0/0",fill="white" ,font=('Helv
 canvas2.create_text(65,210,text="當前單圈次數:",fill="white" ,font=('Helvetica 12 bold'))
 remain_speerate_circle = canvas2.create_text(140,210,text="0/0",fill="white" ,font=('Helvetica 15 bold'))
 
+canvas2.create_text(60, 85, text="檔案名稱 :", fill="white", font=('Helvetica 15 bold'))
+file_label=canvas2.create_text(120, 85, text="", fill="white",anchor="w", font=('Helvetica 12 bold'))
 auto_angle_value = canvas2.create_window((50, 300), window=auto_angle_num,height=30, width=50)
 auto_height_value= canvas2.create_window((150, 300), window=auto_height_num,height=30, width=50)
 auto_seperate_value= canvas2.create_window((240, 300), window=auto_angle_separate,height=30, width=50)
