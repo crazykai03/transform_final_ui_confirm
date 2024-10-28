@@ -5,6 +5,7 @@ from tkinter import filedialog
 import serial.tools.list_ports
 from pathlib import Path
 import serial
+import time
 import threading
 from tkinter import messagebox
 from tkinter import messagebox
@@ -31,6 +32,7 @@ total_circle=0
 whole_circle_counter =1
 total_whole_circle_counter=1
 path=""
+camera_path=""
 
 auto_processing=False
 camera_fixed = False
@@ -42,6 +44,11 @@ processingr=False
 
 excel_process =False
 # --- functions ---
+AV_value = ["f3.4","f4.0","f4.5","f5.0","f5.6","f6.3","f7.1","f8.0"]
+ISO_value=["auto","100","125","160","200","250","320","400","500","640","800","1000","1250","1600","2000","2500","3200"]
+TV_value=["15\"","13\"","10\"","8\"","6\"","5\"","4\"","3\"2","2\"5","2\"","1\"6","1\"3","1\"","0\"8","0\"6","0\"5","0\"4","0\"3","1/4","1/5",
+          "1/6","1/8","1/10","1/13","1/15","1/20","1/25","1/30","1/40","1/50","1/60","1/80","1/100","1/125","1/160","1/200","1/250","1/320"
+          ,"1/400","1/500","1/640","1/800","1/1000","1/1250","1/1600","1/2000"]
 
 
 def insert_processing_list():
@@ -145,7 +152,7 @@ def serial_write():
         ser.write(bytes(command))
         command.clear()
 
-        threading.Timer(0.3, mylog).start()
+        mylog()
 
     except:
         messagebox.showinfo("錯誤", "串口連接錯誤")
@@ -158,13 +165,11 @@ def serial_write():
 
 def reset_rotate_transmit():
     global processingr
+    command.append(ord("2"))
+    command.append(ord("B"))
+    command.append(ord("I"))
     command.append(ord("R"))
-    command.append(ord("E"))
-    command.append(ord("E"))
-    command.append(ord("S"))
-    command.append(ord("E"))
-    command.append(ord("T"))
-    command.append(ord("R"))
+
     command.append(ord("\n"))
     processingr=True
 
@@ -173,10 +178,9 @@ def reset_rotate_transmit():
 
 def reset_camera_transmit():
     global processingc
-    command.append(ord("3"))
-    command.append(ord("0"))
+
+    command.append(ord("2"))
     command.append(ord("R"))
-    command.append(ord("E"))
     command.append(ord("E"))
     command.append(ord("S"))
     command.append(ord("E"))
@@ -203,8 +207,8 @@ def start_auto_transmit():
     else:
 
         auto_processing_auto_fill()
-        command.append(ord("3"))
-        command.append(ord("0"))
+
+        command.append(ord("2"))
         command.append(ord("A"))
         command.append(ord(auto_angle_num_aj[0]))
         command.append(ord(auto_angle_num_aj[1]))
@@ -228,7 +232,7 @@ def fiexed_camera_auto_transmit():
     #if excel_process==True:
         #insert_processing_list()
     auto_processing_auto_fill()
-    command.append(ord("3"))
+
     command.append(ord("1"))
     command.append(ord("R"))
     command.append(ord(auto_seperate_num_aj[0]))
@@ -250,8 +254,8 @@ def camera_transmit():
     print("hello")
     value_auto_fill()
 
-    command.append(ord("3"))
-    command.append(ord("0"))
+
+    command.append(ord("2"))
     command.append(ord("A"))
     command.append(ord(angle_num_aj[0]))
     command.append(ord(angle_num_aj[1]))
@@ -271,8 +275,8 @@ def rotate_transmit():
     global processingr, camera_fixed
     value_auto_fill()
 
-    command.append(ord("3"))
-    command.append(ord("1"))
+
+    command.append(ord("2"))
     command.append(ord("R"))
     command.append(ord(seperate_num_aj[0]))
     command.append(ord(seperate_num_aj[1]))
@@ -282,6 +286,13 @@ def rotate_transmit():
 
     processingr=True
 
+    serial_write()
+
+def response_OK():
+    command.append(ord("2"))
+    command.append(ord("O"))
+    command.append(ord("K"))
+    command.append(ord("\n"))
     serial_write()
 
 
@@ -297,7 +308,7 @@ def on_select(event=None):
     COMPORT = box.get().split(" ")[0]
     #print (COMPORT.split(" ")[0])
     print(COMPORT)
-    ser = serial.Serial(COMPORT, 19200, timeout=0.2)
+    ser = serial.Serial(COMPORT, 57600, timeout=2)
 
 
 #def capture_video():
@@ -395,11 +406,7 @@ def ang_callback(input):
         return True
     else:
         return False
-def response_OK():
-    command.append(ord("O"))
-    command.append(ord("K"))
-    command.append(ord("\n"))
-    serial_write()
+
 
 def disable_wdiget():
     global circle_counter
@@ -415,7 +422,7 @@ def disable_wdiget():
 
     auto_angle_num.config(state=DISABLED)
     auto_height_num.config(state=DISABLED)
-    auto_angle_separate.config(state=DISABLED)
+    auto_angle_separate.config(state=NORMAL)
 
     if auto_processing==True:
         auto_angle_separate.config(state=NORMAL)
@@ -441,10 +448,31 @@ def enable_wdiget():
     canvas2.itemconfig(remain_speerate_circle, text= "0/0" ,
                        fill="white")
     canvas2.itemconfig(auto_status_label, text="空置中", fill="green")
-    canvas2.itemconfig(remain_speerate_circle, text=str(circle_counter) + "/" + str(int(auto_angle_separate.get())),
+    try:
+        canvas2.itemconfig(remain_speerate_circle, text=str(circle_counter) + "/" + str(int(auto_angle_separate.get())),
                        fill="white")
-    canvas2.itemconfig(remain_circle, text=str(whole_circle_counter) + "/" + str(total_whole_circle_counter),
+        canvas2.itemconfig(remain_circle, text=str(whole_circle_counter) + "/" + str(total_whole_circle_counter),
                        fill="white")
+    except:
+        print("OK")
+def camera_setting_transmit():
+    print("transmit")
+
+def take_photo():
+    global camera_path
+    if camera_path=="":
+        messagebox.showinfo("錯誤", "數值有誤,運行取消")
+
+def load_photo_path():
+    global camera_path , camera_label
+    try:
+        temp_camera_path = filedialog.askdirectory()
+
+        camera_path = Path(temp_camera_path)
+        print(camera_path.name)
+        canvas3.itemconfig(camera_label, text=camera_path, fill="black")
+    except:
+        print("no")
 
 def mylog():
     global ser ,uart_receive , processingc,processingr ,circle_counter,camera_fixed,auto_processing,whole_circle_counter,total_whole_circle_counter,excel_process
@@ -459,7 +487,9 @@ def mylog():
 
         if uart_receive != "":
             if uart_receive == 'c' and camera_fixed==False:
+                uart_receive=""
                 response_OK()
+
                 if auto_processing==True:
                     print("auto_start")
                     camera_fixed=True
@@ -470,12 +500,17 @@ def mylog():
                     print("finish")
 
             if uart_receive=="r" and camera_fixed==True:
+                uart_receive = ""
                 response_OK()
+
+
 
                 if auto_processing==True :
                     if circle_counter < int(auto_angle_separate.get()):
                         circle_counter = circle_counter + 1
+                        take_photo()
                         fiexed_camera_auto_transmit()
+
 
                     elif whole_circle_counter<total_whole_circle_counter-1:
                             print("whole counter = ")
@@ -505,7 +540,7 @@ def mylog():
 
         enable_wdiget()
     else:
-        threading.Timer(0.01, mylog).start()
+        threading.Timer(0.2, mylog).start()
 
 
 
@@ -522,7 +557,7 @@ root = Tk()
 
 
 # Adjust size
-root.geometry("800x480")
+root.geometry("800x680")
 root.configure(bg='dimgray')
 bg = PhotoImage(file="Bg.png")
 
@@ -536,7 +571,8 @@ canvas1 = Canvas(root, width=400,
 canvas2 = Canvas(root, width=400,
                  height=480,bd=0, highlightthickness=0 , bg="#2B2E35")
 
-
+canvas3 = Canvas(root, width=800,
+                 height=200,bd=0, highlightthickness=0 , bg="#dcc6f0")
 
 
 
@@ -550,7 +586,7 @@ box = ttk.Combobox(root, values=serial.tools.list_ports.comports())
 box.pack()
 
 box.bind('<<ComboboxSelected>>', on_select)
-
+canvas3.pack(fill='both',side="bottom")
 canvas1.pack(side="left")
 
 canvas2.pack(side="right")
@@ -588,7 +624,7 @@ bg_img_all = canvas1.create_image(400,240,image=bg)
 
 
 
-transmit_btn = Button(root, width=10, height=1, bg='gray',fg='white', text='發送', command=rotate_transmit)
+transmit_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='發送', command=rotate_transmit)
 camera_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機角度發送', command=camera_transmit)
 zero_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='轉盤零位重置', command=reset_rotate_transmit)
 camera_zero_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機零位重置', command=reset_camera_transmit)
@@ -596,23 +632,52 @@ excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='加載�
 remove_excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='刪除加載', command=remove_excel_file)
 auto_start_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='啟動自動拍攝', command=start_auto_transmit)
 
+photo_path = Button(root, width=10, height=2, bg='gray',fg='white', text='路徑選擇', command=load_photo_path)
+photo_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='進行拍攝', command=take_photo)
+
+camera_setting_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機參數發送', command=camera_setting_transmit)
 
 
-canvas1.create_window(25,320, anchor='nw', window=transmit_btn)
+AV_combo = ttk.Combobox(root,width=8,value=AV_value)
+AV_combo.current(1)
+
+ISO_combo = ttk.Combobox(root,width=8,value=ISO_value)
+ISO_combo.current(0)
+
+TV_combo = ttk.Combobox(root,width=8,value=TV_value)
+TV_combo.current(18)
+
+zoom_value = tk.Scale(root,from_=0,to=150 , orient='horizontal',background='#dcc6f0',highlightthickness=0)
+
+
+canvas1.create_window(220,230, anchor='nw', window=transmit_btn)
 canvas1.create_window(220,70, anchor='nw', window=camera_btn)
-canvas1.create_window(180,150, anchor='nw', window=zero_btn)
-canvas1.create_window(280,150, anchor='nw', window=camera_zero_btn)
+canvas1.create_window(310,230, anchor='nw', window=zero_btn)
+canvas1.create_window(310,70, anchor='nw', window=camera_zero_btn)
 canvas2.create_window(120,20, anchor='nw', window=excel_btn)
 canvas2.create_window(210,20, anchor='nw', window=remove_excel_btn)
 canvas2.create_window(120,350, anchor='nw', window=auto_start_btn)
 
+
+
+canvas3.create_window(140,10, anchor='nw', window=photo_path)
+canvas3.create_window(230,10, anchor='nw', window=photo_btn)
+canvas3.create_window(70,110, anchor='nw', window=AV_combo)
+canvas3.create_window(210,110, anchor='nw', window=ISO_combo)
+canvas3.create_window(350,110, anchor='nw', window=TV_combo)
+canvas3.create_window(70,150, anchor='nw', window=zoom_value)
+
+canvas3.create_window(200,150, anchor='nw', window=camera_setting_btn)
 
 canvas1.create_text(50,50,text="角度 :",fill="white" ,font=('Helvetica 15 bold'))
 canvas1.create_text(88,90,text="度",fill="white" ,font=('Helvetica 15 bold'))
 canvas1.create_text(120,50,text="高度 :",fill="white" ,font=('Helvetica 15 bold'))
 canvas1.create_text(180,90,text="毫米",fill="white" ,font=('Helvetica 15 bold'))
 
-canvas1.create_text(80,170,text="轉盤零位校正:",fill="white" ,font=('Helvetica 12 bold'))
+canvas1.create_text(190,250,text="度",fill="white" ,font=('Helvetica 15 bold'))
+canvas1.create_text(160,280,text="範圍(0~359)",fill="red" ,font=('Helvetica 10 bold'))
+canvas1.create_text(40,120,text="範圍(-90~90)",fill="red" ,font=('Helvetica 10 bold'))
+canvas1.create_text(140,120,text="範圍(0~3000)",fill="red" ,font=('Helvetica 10 bold'))
 canvas1.create_text(65,250,text="旋轉角度:",fill="white" ,font=('Helvetica 12 bold'))
 
 canvas1.create_text(50,390,text="狀態:",fill="white" ,font=('Helvetica 12 bold'))
@@ -634,6 +699,9 @@ remain_speerate_circle = canvas2.create_text(140,210,text="0/0",fill="white" ,fo
 
 canvas2.create_text(60, 85, text="檔案名稱 :", fill="white", font=('Helvetica 15 bold'))
 file_label=canvas2.create_text(120, 85, text="", fill="white",anchor="w", font=('Helvetica 12 bold'))
+
+camera_label=canvas3.create_text(120, 75, text="", fill="black",anchor="w", font=('Helvetica 12 bold'))
+
 auto_angle_value = canvas2.create_window((50, 300), window=auto_angle_num,height=30, width=50)
 auto_height_value= canvas2.create_window((150, 300), window=auto_height_num,height=30, width=50)
 auto_seperate_value= canvas2.create_window((240, 300), window=auto_angle_separate,height=30, width=50)
@@ -645,7 +713,13 @@ angle_value = canvas1.create_window((45, 90), window=angle_num,height=30, width=
 height_value= canvas1.create_window((130, 90), window=height_num,height=30, width=50)
 seperate_value= canvas1.create_window((150, 250), window=angle_separate,height=30, width=50)
 
+canvas3.create_text(60,30,text="相片存放 :",fill="black" ,font=('Helvetica 15 bold'))
+canvas3.create_text(60, 75, text="路徑名稱 :", fill="black", font=('Helvetica 15 bold'))
 
+canvas3.create_text(40, 120, text="光圈:", fill="black", font=('Helvetica 15 bold'))
+canvas3.create_text(180, 120, text="曝光:", fill="black", font=('Helvetica 15 bold'))
+canvas3.create_text(320, 120, text="快門:", fill="black", font=('Helvetica 15 bold'))
+canvas3.create_text(40, 177, text="ZOOM:", fill="black", font=('Helvetica 12 bold'))
 
 #cap = cv2.VideoCapture(0)
 #capture_video()
