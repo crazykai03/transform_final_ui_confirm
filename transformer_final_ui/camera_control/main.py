@@ -5,15 +5,19 @@ from tkinter import filedialog
 import serial.tools.list_ports
 from pathlib import Path
 import serial
+import json
 import time
+import requests
 import threading
+
+import shutil
 from tkinter import messagebox
-from tkinter import messagebox
-import cv2
-from PIL import Image, ImageTk
+
 
 global ser
 import pandas as pd
+
+camera_base_url="http://192.168.1.2:8080/ccapi/ver100/"
 
 uart_receive = []
 angle_num_aj=""
@@ -201,7 +205,7 @@ def start_auto_transmit():
     if auto_angle_separate.get()=="":
         messagebox.showinfo("錯誤", "數值有誤,運行取消")
         auto_processing = False
-    if 360% int(auto_angle_separate.get()) != 0 :
+    if (False):
         messagebox.showinfo("錯誤", "次數必順被整除")
         auto_processing = False
     else:
@@ -423,6 +427,7 @@ def disable_wdiget():
     auto_angle_num.config(state=DISABLED)
     auto_height_num.config(state=DISABLED)
     auto_angle_separate.config(state=NORMAL)
+    image_name.config(state=DISABLED)
 
     if auto_processing==True:
         auto_angle_separate.config(state=NORMAL)
@@ -445,6 +450,8 @@ def enable_wdiget():
     auto_angle_num.config(state=NORMAL)
     auto_height_num.config(state=NORMAL)
     auto_angle_separate.config(state=NORMAL)
+    image_name.config(state=NORMAL)
+
     canvas2.itemconfig(remain_speerate_circle, text= "0/0" ,
                        fill="white")
     canvas2.itemconfig(auto_status_label, text="空置中", fill="green")
@@ -457,11 +464,99 @@ def enable_wdiget():
         print("OK")
 def camera_setting_transmit():
     print("transmit")
+    tv_data = json.dumps({"value":TV_combo.get()})
+    iso_data = json.dumps({"value": ISO_combo.get()})
+    av_data = json.dumps({"value": AV_combo.get()})
+    zoom_data = json.dumps({"value": zoom_value.get()})
+
+    responsetv = requests.put(camera_base_url+"shooting/settings/tv",data=tv_data)
+    time.sleep(0.5)
+    responseav = requests.put(camera_base_url + "shooting/settings/av", data=av_data)
+    time.sleep(0.5)
+    responseiso = requests.put(camera_base_url + "shooting/settings/iso", data=iso_data)
+    time.sleep(0.5)
+    responsezoom = requests.post(camera_base_url + "shooting/control/zoom", data=zoom_data)
+
+    initial_camera_data()
+
+
+def initial_camera_data():
+    battery_level_text=""
+    battery_level_color="blue"
+    try:
+        connect_response = requests.get("http://192.168.1.2:8080/ccapi")
+        if connect_response.status_code==200:
+
+            tv_get_data = requests.get(camera_base_url + "shooting/settings/tv")
+            av_get_data = requests.get(camera_base_url + "shooting/settings/av")
+            iso_get_data = requests.get(camera_base_url + "shooting/settings/iso")
+            zoom_get_data = requests.get(camera_base_url + "shooting/control/zoom")
+
+            canvas3.itemconfig(tv_label, text=tv_get_data.json()['value'], fill="red")
+            canvas3.itemconfig(av_label, text=av_get_data.json()['value'], fill="red")
+            canvas3.itemconfig(iso_label, text=iso_get_data.json()['value'], fill="red")
+            zoom_value.set(int(zoom_get_data.json()['value']))
+
+            battery_data = requests.get(camera_base_url + "devicestatus/battery")
+            if battery_data.json()['level']=="full":
+                battery_level_text="滿電量"
+                battery_level_color="green"
+            elif battery_data.json()['level']=="high":
+                battery_level_text="高電量"
+                battery_level_color="green"
+            elif battery_data.json()['level']=="half":
+                battery_level_text="中等電量"
+                battery_level_color="blue"
+            elif battery_data.json()['level']=="quarter":
+                battery_level_text="低電量"
+                battery_level_color="red"
+
+            canvas3.itemconfig(battery_label, text=battery_level_text, fill=battery_level_color)
+            print(battery_data.json())
+
+        else:
+            messagebox.showinfo("錯誤", "相機連接失敗")
+
+    except:
+        messagebox.showinfo("錯誤", "相機連接失敗")
+
+
 
 def take_photo():
-    global camera_path
+    global camera_path,auto_seperate_num_aj,whole_circle_counter,auto_processing
+    photo_response=""
+
+    print("take")
+    photo_name ="demo_photo"
+    if auto_processing == True:
+        photo_name = image_name.get()+"_"+str(whole_circle_counter)+"_"+str(auto_seperate_num_aj)+".jpg"
+        print(photo_name)
     if camera_path=="":
-        messagebox.showinfo("錯誤", "數值有誤,運行取消")
+        messagebox.showinfo("錯誤", "沒有選擇相機路徑")
+        auto_processing = False
+    else:
+        af_data= {"af":True}
+        jsondata = json.dumps(af_data)
+        print (camera_base_url+"shooting/control/shutterbutton")
+        taking_response =requests.post(camera_base_url+"shooting/control/shutterbutton",data=jsondata)
+
+        if(taking_response.status_code==200):
+
+            while True:
+                photo_response=requests.get(camera_base_url+"contents/sd/100CANON")
+
+                time.sleep(0.5)
+                if photo_response.status_code==200:
+                    break
+
+
+
+        download_photo = requests.get(photo_response.json()['url'][0], stream=True)
+
+        if (photo_response.status_code==200):
+            with open(str(photo_name)+'.jpg','wb') as out_file:
+                shutil.copyfileobj(download_photo.raw,out_file)
+        del_response =  requests.delete(photo_response.json()['url'][0])
 
 def load_photo_path():
     global camera_path , camera_label
@@ -506,6 +601,7 @@ def mylog():
 
 
                 if auto_processing==True :
+                    print("111111111");
                     if circle_counter < int(auto_angle_separate.get()):
                         circle_counter = circle_counter + 1
                         take_photo()
@@ -513,6 +609,7 @@ def mylog():
 
 
                     elif whole_circle_counter<total_whole_circle_counter-1:
+
                             print("whole counter = ")
                             print(whole_circle_counter)
                             circle_counter=0
@@ -520,6 +617,7 @@ def mylog():
                             insert_processing_list()
                             start_auto_transmit()
                     else:
+                        print("3333333");
                         auto_processing = False
                         whole_circle_counter = 0
                         circle_counter = 0
@@ -604,6 +702,8 @@ auto_angle_num = Entry(canvas2, fg="black", bd=5,justify='center')
 auto_height_num = Entry(canvas2, fg="black", bd=5,justify='center')
 auto_angle_separate = Entry(canvas2,fg="black",bd=5,justify='center')
 
+image_name =  Entry(canvas3,fg="black",bd=5,justify='center')
+
 
 angle_num.config(validate ="key",
          validatecommand =(reg, '%P'))
@@ -636,15 +736,15 @@ photo_path = Button(root, width=10, height=2, bg='gray',fg='white', text='路徑
 photo_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='進行拍攝', command=take_photo)
 
 camera_setting_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機參數發送', command=camera_setting_transmit)
+get_camera_setting = Button(root, width=10, height=2, bg='gray',fg='white', text='相機連接', command=initial_camera_data)
 
-
-AV_combo = ttk.Combobox(root,width=8,value=AV_value)
+AV_combo = ttk.Combobox(root,width=8,value=AV_value,state="readonly")
 AV_combo.current(1)
 
-ISO_combo = ttk.Combobox(root,width=8,value=ISO_value)
+ISO_combo = ttk.Combobox(root,width=8,value=ISO_value,state="readonly")
 ISO_combo.current(0)
 
-TV_combo = ttk.Combobox(root,width=8,value=TV_value)
+TV_combo = ttk.Combobox(root,width=8,value=TV_value,state="readonly")
 TV_combo.current(18)
 
 zoom_value = tk.Scale(root,from_=0,to=150 , orient='horizontal',background='#dcc6f0',highlightthickness=0)
@@ -668,7 +768,7 @@ canvas3.create_window(350,110, anchor='nw', window=TV_combo)
 canvas3.create_window(70,150, anchor='nw', window=zoom_value)
 
 canvas3.create_window(200,150, anchor='nw', window=camera_setting_btn)
-
+canvas3.create_window(300,150, anchor='nw', window=get_camera_setting)
 canvas1.create_text(50,50,text="角度 :",fill="white" ,font=('Helvetica 15 bold'))
 canvas1.create_text(88,90,text="度",fill="white" ,font=('Helvetica 15 bold'))
 canvas1.create_text(120,50,text="高度 :",fill="white" ,font=('Helvetica 15 bold'))
@@ -705,6 +805,8 @@ camera_label=canvas3.create_text(120, 75, text="", fill="black",anchor="w", font
 auto_angle_value = canvas2.create_window((50, 300), window=auto_angle_num,height=30, width=50)
 auto_height_value= canvas2.create_window((150, 300), window=auto_height_num,height=30, width=50)
 auto_seperate_value= canvas2.create_window((240, 300), window=auto_angle_separate,height=30, width=50)
+image_name_value= canvas3.create_window((650, 40), window=image_name,height=30, width=150)
+
 
 
 canvas2.create_text(60,40,text="檔案 :",fill="white" ,font=('Helvetica 15 bold'))
@@ -719,8 +821,14 @@ canvas3.create_text(60, 75, text="路徑名稱 :", fill="black", font=('Helvetic
 canvas3.create_text(40, 120, text="光圈:", fill="black", font=('Helvetica 15 bold'))
 canvas3.create_text(180, 120, text="曝光:", fill="black", font=('Helvetica 15 bold'))
 canvas3.create_text(320, 120, text="快門:", fill="black", font=('Helvetica 15 bold'))
+canvas3.create_text(500, 120, text="電量:", fill="black", font=('Helvetica 15 bold'))
 canvas3.create_text(40, 177, text="ZOOM:", fill="black", font=('Helvetica 12 bold'))
-
+canvas3.create_text(520, 40, text="照片名稱:", fill="black", font=('Helvetica 12 bold'))
+canvas3.create_text(35, 140, text="實際數值:", fill="RED", font=('Helvetica 10 bold'))
+av_label=canvas3.create_text(83, 140, text="f4.0", fill="RED", font=('Helvetica 10 bold'))
+iso_label=canvas3.create_text(225, 140, text="auto", fill="RED", font=('Helvetica 10 bold'))
+tv_label=canvas3.create_text(361, 140, text="1/4", fill="RED", font=('Helvetica 10 bold'))
+battery_label=canvas3.create_text(540, 120, text="", fill="black", anchor="w",font=('Helvetica 15 bold'))
 #cap = cv2.VideoCapture(0)
 #capture_video()
 #root.overrideredirect(True)
