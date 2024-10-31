@@ -325,8 +325,11 @@ def on_select(event=None):
     COMPORT = box.get().split(" ")[0]
     #print (COMPORT.split(" ")[0])
     print(COMPORT)
-    ser = serial.Serial(COMPORT, 57600, timeout=0.5)
-    threading.Timer(0.2, mylog).start()
+    try:
+        ser = serial.Serial(COMPORT, 57600, timeout=0.5)
+        threading.Timer(0.2, mylog).start()
+    except:
+        print("not allow")
 
 
 #def capture_video():
@@ -552,6 +555,7 @@ def take_photo():
         photo_name=image_name.get() if image_name.get()!="" else "testing_photo"
 
     print(photo_name)
+
     try:
         if camera_path=="":
             messagebox.showinfo("錯誤", "沒有選擇相機路徑")
@@ -568,16 +572,18 @@ def take_photo():
                     photo_response=requests.get(camera_base_url+"contents/sd/100CANON")
 
                     time.sleep(0.5)
-                    if photo_response.status_code==200:
+                    print("waiting")
+                    if photo_response.status_code==200 and len(photo_response.json()['url'])!=0:
                         break
 
 
 
             download_photo = requests.get(photo_response.json()['url'][0], stream=True)
-
             if (photo_response.status_code==200):
-                with open(str(photo_name)+'.jpg','wb') as out_file:
+
+                with open(str(camera_path)+"\\"+str(photo_name)+'.jpg','wb') as out_file:
                     shutil.copyfileobj(download_photo.raw,out_file)
+                print(photo_response.json()['url'][0])
             del_response =  requests.delete(photo_response.json()['url'][0])
     except:
         messagebox.showinfo("錯誤", "相機未連接")
@@ -622,7 +628,7 @@ def process_rundown():
                     print("111111111");
                     if circle_counter < int(auto_angle_separate.get()):
                         circle_counter = circle_counter + 1
-                        #take_photo()
+                        take_photo()
                         print("take photo")
                         if circle_counter< int(auto_angle_separate.get()):
                             fiexed_camera_auto_transmit()
@@ -835,10 +841,10 @@ canvas2.create_text(50,410,text="自動化狀態:",fill="white" ,font=('Helvetic
 auto_status_label = canvas2.create_text(130,410,text="空置中",fill="green" ,font=('Helvetica 12 bold'))
 
 canvas2.create_text(50,180,text="圈數進度:",fill="white" ,font=('Helvetica 12 bold'))
-remain_circle = canvas2.create_text(140,180,text="0/0",fill="white" ,font=('Helvetica 15 bold'))
+remain_circle = canvas2.create_text(160,180,text="0/0",fill="white" ,font=('Helvetica 15 bold'))
 
 canvas2.create_text(65,210,text="當前單圈次數:",fill="white" ,font=('Helvetica 12 bold'))
-remain_speerate_circle = canvas2.create_text(140,210,text="0/0",fill="white" ,font=('Helvetica 15 bold'))
+remain_speerate_circle = canvas2.create_text(160,210,text="0/0",fill="white",font=('Helvetica 15 bold'))
 
 canvas2.create_text(60, 85, text="檔案名稱 :", fill="white", font=('Helvetica 15 bold'))
 file_label=canvas2.create_text(120, 85, text="", fill="white",anchor="w", font=('Helvetica 12 bold'))
