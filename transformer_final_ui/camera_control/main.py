@@ -8,13 +8,14 @@ import serial
 import json
 import time
 import requests
-import threading
 
+import numpy as np
 import shutil
 from tkinter import messagebox
+import math
+import threading
 
 
-global ser
 import pandas as pd
 
 camera_base_url="http://192.168.1.2:8080/ccapi/ver100/"
@@ -28,12 +29,14 @@ auto_angle_num_aj=""
 auto_height_num_aj=""
 auto_seperate_num_aj=""
 
+uart_receive=""
+
 process_list=[]
 
 circle_counter=0
 total_circle=0
 
-whole_circle_counter =1
+whole_circle_counter =0
 total_whole_circle_counter=1
 path=""
 camera_path=""
@@ -54,12 +57,13 @@ TV_value=["15\"","13\"","10\"","8\"","6\"","5\"","4\"","3\"2","2\"5","2\"","1\"6
           "1/6","1/8","1/10","1/13","1/15","1/20","1/25","1/30","1/40","1/50","1/60","1/80","1/100","1/125","1/160","1/200","1/250","1/320"
           ,"1/400","1/500","1/640","1/800","1/1000","1/1250","1/1600","1/2000"]
 
-
+global ser
 def insert_processing_list():
     global process_list,whole_circle_counter,total_whole_circle_counter
     auto_angle_num.config(state=NORMAL)
     auto_height_num.config(state=NORMAL)
     auto_angle_separate.config(state=NORMAL)
+    image_name.config(state=NORMAL)
     print(whole_circle_counter)
     auto_angle_num.delete(0,tk.END)
     auto_height_num.delete(0, tk.END)
@@ -71,9 +75,18 @@ def insert_processing_list():
     auto_angle_separate.delete(0, tk.END)
 
     auto_angle_separate.insert(0,process_list[whole_circle_counter][2])
+
+    image_name.delete(0, tk.END)
+
+    image_name.insert(0, process_list[whole_circle_counter][3])
+
+
+
+
     auto_angle_num.config(state=DISABLED)
     auto_height_num.config(state=DISABLED)
     auto_angle_separate.config(state=DISABLED)
+    image_name.config(state=DISABLED)
 
 
 
@@ -155,8 +168,9 @@ def serial_write():
         print(command)
         ser.write(bytes(command))
         command.clear()
-
-        mylog()
+        disable_wdiget()
+        #process_rundown()
+        #mylog()
 
     except:
         messagebox.showinfo("錯誤", "串口連接錯誤")
@@ -196,6 +210,7 @@ def reset_camera_transmit():
 
 
 
+
 def start_auto_transmit():
     global auto_processing,camera_fixed,excel_process,ser
 
@@ -205,9 +220,7 @@ def start_auto_transmit():
     if auto_angle_separate.get()=="":
         messagebox.showinfo("錯誤", "數值有誤,運行取消")
         auto_processing = False
-    if (False):
-        messagebox.showinfo("錯誤", "次數必順被整除")
-        auto_processing = False
+
     else:
 
         auto_processing_auto_fill()
@@ -287,7 +300,7 @@ def rotate_transmit():
     command.append(ord(seperate_num_aj[2]))
     command.append(ord("\n"))
 
-
+    camera_fixed=True
     processingr=True
 
     serial_write()
@@ -312,7 +325,8 @@ def on_select(event=None):
     COMPORT = box.get().split(" ")[0]
     #print (COMPORT.split(" ")[0])
     print(COMPORT)
-    ser = serial.Serial(COMPORT, 57600, timeout=2)
+    ser = serial.Serial(COMPORT, 57600, timeout=0.5)
+    threading.Timer(0.2, mylog).start()
 
 
 #def capture_video():
@@ -332,14 +346,17 @@ def load_excel_file():
     filepath = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xlsx")])
 
     print(filepath)
+    remove_excel_file()
     try:
         path=Path(filepath)
 
         df = pd.read_excel(path)
         for index, row in df.iterrows():
             process_list.append(row.to_list())
+
         print(process_list)
-        total_whole_circle_counter = len(process_list[0])
+        total_whole_circle_counter = len(process_list)
+        print(total_whole_circle_counter)
         whole_circle_counter=0
         print(total_whole_circle_counter)
 
@@ -354,12 +371,12 @@ def reload_excel():
     global workbook,total_whole_circle_counter,excel_process,whole_circle_counter,path,process_list
     try:
 
-
+        process_list=[]
         df = pd.read_excel(path)
         for index, row in df.iterrows():
             process_list.append(row.to_list())
         print(process_list)
-        total_whole_circle_counter = len(process_list[0])
+        total_whole_circle_counter = len(process_list)
         whole_circle_counter = 0
         print(total_whole_circle_counter)
         insert_processing_list()
@@ -527,36 +544,43 @@ def take_photo():
     photo_response=""
 
     print("take")
-    photo_name ="demo_photo"
+
     if auto_processing == True:
         photo_name = image_name.get()+"_"+str(whole_circle_counter)+"_"+str(auto_seperate_num_aj)+".jpg"
-        print(photo_name)
-    if camera_path=="":
-        messagebox.showinfo("錯誤", "沒有選擇相機路徑")
-        auto_processing = False
+
     else:
-        af_data= {"af":True}
-        jsondata = json.dumps(af_data)
-        print (camera_base_url+"shooting/control/shutterbutton")
-        taking_response =requests.post(camera_base_url+"shooting/control/shutterbutton",data=jsondata)
+        photo_name=image_name.get() if image_name.get()!="" else "testing_photo"
 
-        if(taking_response.status_code==200):
+    print(photo_name)
+    try:
+        if camera_path=="":
+            messagebox.showinfo("錯誤", "沒有選擇相機路徑")
+            auto_processing = False
+        else:
+            af_data= {"af":True}
+            jsondata = json.dumps(af_data)
+            print (camera_base_url+"shooting/control/shutterbutton")
+            taking_response =requests.post(camera_base_url+"shooting/control/shutterbutton",data=jsondata)
 
-            while True:
-                photo_response=requests.get(camera_base_url+"contents/sd/100CANON")
+            if(taking_response.status_code==200):
 
-                time.sleep(0.5)
-                if photo_response.status_code==200:
-                    break
+                while True:
+                    photo_response=requests.get(camera_base_url+"contents/sd/100CANON")
+
+                    time.sleep(0.5)
+                    if photo_response.status_code==200:
+                        break
 
 
 
-        download_photo = requests.get(photo_response.json()['url'][0], stream=True)
+            download_photo = requests.get(photo_response.json()['url'][0], stream=True)
 
-        if (photo_response.status_code==200):
-            with open(str(photo_name)+'.jpg','wb') as out_file:
-                shutil.copyfileobj(download_photo.raw,out_file)
-        del_response =  requests.delete(photo_response.json()['url'][0])
+            if (photo_response.status_code==200):
+                with open(str(photo_name)+'.jpg','wb') as out_file:
+                    shutil.copyfileobj(download_photo.raw,out_file)
+            del_response =  requests.delete(photo_response.json()['url'][0])
+    except:
+        messagebox.showinfo("錯誤", "相機未連接")
 
 def load_photo_path():
     global camera_path , camera_label
@@ -569,17 +593,11 @@ def load_photo_path():
     except:
         print("no")
 
-def mylog():
-    global ser ,uart_receive , processingc,processingr ,circle_counter,camera_fixed,auto_processing,whole_circle_counter,total_whole_circle_counter,excel_process
-    #print("reading")
-    disable_wdiget()
 
-    while ser.inWaiting():  # Or: while ser.inWaiting():
-
-        uart_receive = ser.readline()
-        uart_receive=uart_receive.decode('UTF-8').strip()
-        print(uart_receive)
-
+def process_rundown():
+    global ser, uart_receive, processingc, processingr, circle_counter, camera_fixed, auto_processing, whole_circle_counter, total_whole_circle_counter, excel_process
+    if True:
+        print("waiting")
         if uart_receive != "":
             if uart_receive == 'c' and camera_fixed==False:
                 uart_receive=""
@@ -604,24 +622,27 @@ def mylog():
                     print("111111111");
                     if circle_counter < int(auto_angle_separate.get()):
                         circle_counter = circle_counter + 1
-                        take_photo()
-                        fiexed_camera_auto_transmit()
+                        #take_photo()
+                        print("take photo")
+                        if circle_counter< int(auto_angle_separate.get()):
+                            fiexed_camera_auto_transmit()
 
 
-                    elif whole_circle_counter<total_whole_circle_counter-1:
+                        elif whole_circle_counter<total_whole_circle_counter:
 
-                            print("whole counter = ")
-                            print(whole_circle_counter)
-                            circle_counter=0
-                            whole_circle_counter=whole_circle_counter+1
-                            insert_processing_list()
-                            start_auto_transmit()
-                    else:
-                        print("3333333");
-                        auto_processing = False
-                        whole_circle_counter = 0
-                        circle_counter = 0
-                        reload_excel()
+                                print("whole counter = ")
+                                print(whole_circle_counter)
+                                circle_counter=0
+                                whole_circle_counter=whole_circle_counter+1
+                                if whole_circle_counter <total_whole_circle_counter:
+                                    insert_processing_list()
+                                    start_auto_transmit()
+                                else:
+                                    print("3333333");
+                                    auto_processing = False
+                                    whole_circle_counter = 0
+                                    circle_counter = 0
+                                    reload_excel()
 
 
 
@@ -637,8 +658,30 @@ def mylog():
     if processingc == False and processingr==False and auto_processing==False:
 
         enable_wdiget()
+        print("enable")
     else:
-        threading.Timer(0.2, mylog).start()
+        #threading.Timer(0.2, mylog).start()
+        None
+
+def mylog():
+    global ser ,uart_receive , processingc,processingr ,circle_counter,camera_fixed,auto_processing,whole_circle_counter,total_whole_circle_counter,excel_process
+    #print("reading")
+
+    while ser.inWaiting():  # Or: while ser.inWaiting():
+
+        uart_receive = ser.readline()
+        uart_receive=uart_receive.decode('UTF-8').strip()
+        print(uart_receive)
+        if uart_receive!="":
+            process_rundown()
+
+
+    threading.Timer(0.2, mylog).start()
+
+
+
+
+
 
 
 
@@ -833,4 +876,6 @@ battery_label=canvas3.create_text(540, 120, text="", fill="black", anchor="w",fo
 #capture_video()
 #root.overrideredirect(True)
 
+
+#threading.Timer(0.2, mylog()).start()
 root.mainloop()
