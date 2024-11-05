@@ -197,7 +197,7 @@ def reset_rotate_transmit():
 def reset_camera_transmit():
     global processingc
 
-    command.append(ord("2"))
+    command.append(ord("1"))
     command.append(ord("R"))
     command.append(ord("E"))
     command.append(ord("S"))
@@ -272,7 +272,7 @@ def camera_transmit():
     value_auto_fill()
 
 
-    command.append(ord("2"))
+    command.append(ord("1"))
     command.append(ord("A"))
     command.append(ord(angle_num_aj[0]))
     command.append(ord(angle_num_aj[1]))
@@ -306,7 +306,7 @@ def rotate_transmit():
     serial_write()
 
 def response_OK():
-    command.append(ord("2"))
+    command.append(ord("1"))
     command.append(ord("O"))
     command.append(ord("K"))
     command.append(ord("\n"))
@@ -388,7 +388,7 @@ def reload_excel():
         print("no")
 
 def remove_excel_file():
-    global process_list,path,total_whole_circle_counter,circle_counter,total_circle,whole_circle_counter,auto_processing
+    global process_list,path,total_whole_circle_counter,circle_counter,total_circle,whole_circle_counter,auto_processing,processingc,processingr
     print("remove")
     path=""
     circle_counter = 0
@@ -398,6 +398,8 @@ def remove_excel_file():
     process_list=[]
     auto_processing=False
     canvas2.itemconfig(file_label, text="", fill="white")
+    processingc=False
+    processingr=False
     enable_wdiget()
 
 
@@ -436,8 +438,14 @@ def disable_wdiget():
     global circle_counter
     canvas1.itemconfig(status_label, text="進行中", fill="red")
     angle_num.config(state=DISABLED)
+    auto_angle_num.config(state=DISABLED)
+
     height_num.config(state=DISABLED)
+    auto_height_num.config(state=DISABLED)
+
     angle_separate.config(state=DISABLED)
+    auto_angle_separate.config(state=DISABLED)
+
     transmit_btn.config(state=DISABLED)
     camera_btn.config(state=DISABLED)
     zero_btn.config(state=DISABLED)
@@ -460,8 +468,14 @@ def disable_wdiget():
 def enable_wdiget():
     canvas1.itemconfig(status_label, text="完成", fill="green")
     angle_num.config(state=NORMAL)
+    auto_angle_num.config(state=NORMAL)
+
+    auto_height_num.config(state=NORMAL)
     height_num.config(state=NORMAL)
+    auto_height_num.config(state=NORMAL)
+
     angle_separate.config(state=NORMAL)
+    auto_angle_separate.config(state=NORMAL)
     transmit_btn.config(state=NORMAL)
     camera_btn.config(state=NORMAL)
     zero_btn.config(state=NORMAL)
@@ -549,7 +563,7 @@ def take_photo():
     print("take")
 
     if auto_processing == True:
-        photo_name = image_name.get()+"_"+str(whole_circle_counter)+"_"+str(auto_seperate_num_aj)+".jpg"
+        photo_name = image_name.get()+"_"+str(angle_num.get())+"_"+str(height_num.get())+".jpg"
 
     else:
         photo_name=image_name.get() if image_name.get()!="" else "testing_photo"
@@ -587,6 +601,18 @@ def take_photo():
             del_response =  requests.delete(photo_response.json()['url'][0])
     except:
         messagebox.showinfo("錯誤", "相機未連接")
+
+def check_camera_storage_empty():
+    camera_file_response = requests.get(camera_base_url + "contents/sd")
+    len_of_file = len(camera_file_response.json()['url'])
+    for i in range (len_of_file):
+        photo_response = requests.delete(camera_file_response.json['url'][i])
+
+
+
+
+
+
 
 def load_photo_path():
     global camera_path , camera_label
@@ -701,7 +727,7 @@ def mylog():
 # Create object
 root = Tk()
 
-
+button1 = PhotoImage(file = r"button1.png")
 
 # Adjust size
 root.geometry("800x680")
@@ -775,10 +801,10 @@ bg_img_all = canvas1.create_image(400,240,image=bg)
 
 transmit_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='發送', command=rotate_transmit)
 camera_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機角度發送', command=camera_transmit)
-zero_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='轉盤零位重置', command=reset_rotate_transmit)
-camera_zero_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機零位重置', command=reset_camera_transmit)
+zero_btn = Button(root, width=10, height=2, bg='red',fg='white', text='轉盤零位重置', command=reset_rotate_transmit)
+camera_zero_btn = Button(root, width=10, height=2, bg='red',fg='white', text='相機零位重置', command=reset_camera_transmit)
 excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='加載進程', command=load_excel_file)
-remove_excel_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='刪除加載', command=remove_excel_file)
+remove_excel_btn = Button(root, width=10, height=2, bg='red',fg='white', text='刪除加載/重置', command=remove_excel_file)
 auto_start_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='啟動自動拍攝', command=start_auto_transmit)
 
 photo_path = Button(root, width=10, height=2, bg='gray',fg='white', text='路徑選擇', command=load_photo_path)
@@ -884,4 +910,5 @@ battery_label=canvas3.create_text(540, 120, text="", fill="black", anchor="w",fo
 
 
 #threading.Timer(0.2, mylog()).start()
+root.resizable(width=0, height=0)
 root.mainloop()
