@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -42,11 +41,11 @@ waiting_rotation_response=False
 
 process_list=[]
 
-circle_counter=0
+rotation_counter=0
 total_circle=0
 
-whole_circle_counter =0
-total_whole_circle_counter=1
+camera_up_down_counter =0
+total_camera_up_down_counter=1
 path=""
 camera_path=""
 
@@ -68,26 +67,27 @@ TV_value=["15\"","13\"","10\"","8\"","6\"","5\"","4\"","3\"2","2\"5","2\"","1\"6
 
 global ser
 def insert_processing_list():
-    global process_list,whole_circle_counter,total_whole_circle_counter
+    global process_list,camera_up_down_counter,total_camera_up_down_counter
     auto_angle_num.config(state=NORMAL)
     auto_height_num.config(state=NORMAL)
     auto_angle_separate.config(state=NORMAL)
     image_name.config(state=NORMAL)
-    print(whole_circle_counter)
+    print(camera_up_down_counter)
     auto_angle_num.delete(0,tk.END)
     auto_height_num.delete(0, tk.END)
-
-
-    auto_angle_num.insert(0,process_list[whole_circle_counter][0])
-    auto_height_num.delete(0, tk.END)
-    auto_height_num.insert(0,process_list[whole_circle_counter][1])
     auto_angle_separate.delete(0, tk.END)
 
-    auto_angle_separate.insert(0,process_list[whole_circle_counter][2])
+
+    auto_angle_num.insert(0, int(process_list[camera_up_down_counter][0]))
+    auto_height_num.delete(0, tk.END)
+    auto_height_num.insert(0, int(process_list[camera_up_down_counter][1]))
+
+    print(process_list[0][2])
+    auto_angle_separate.insert(0,int(process_list[0][2]))
 
     image_name.delete(0, tk.END)
 
-    image_name.insert(0, process_list[whole_circle_counter][3])
+    image_name.insert(0, process_list[0][3])
 
 
 
@@ -140,11 +140,11 @@ def value_auto_fill():
 
 def auto_processing_auto_fill():
 
-    global auto_angle_num_aj , auto_height_num_aj , auto_seperate_num_aj,circle_counter,excel_process
+    global auto_angle_num_aj , auto_height_num_aj , auto_seperate_num_aj,rotation_counter,excel_process
 
     auto_angle_num_aj = auto_angle_num.get()
     auto_height_num_aj = auto_height_num.get()
-    auto_seperate_num_aj = str(int(360/int(auto_angle_separate.get()))*circle_counter)
+    auto_seperate_num_aj = str(int(360/int(auto_angle_separate.get())) * rotation_counter)
 
 
     if len(auto_angle_num_aj)==1:
@@ -250,12 +250,12 @@ def start_auto_transmit():
 
         auto_processing=True
         camera_fixed=False
-        print(command)
+
         waiting_camera_response=True
         serial_write()
 
 def fiexed_camera_auto_transmit():
-    global circle_counter,auto_processing,excel_process,waiting_rotation_response
+    global rotation_counter,auto_processing,excel_process,waiting_rotation_response
 
     #if excel_process==True:
         #insert_processing_list()
@@ -365,7 +365,7 @@ def on_select(event=None):
 
 
 def load_excel_file():
-    global workbook,total_whole_circle_counter,excel_process,whole_circle_counter,path,process_list
+    global workbook,total_camera_up_down_counter,excel_process,camera_up_down_counter,path,process_list
 
     filepath = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xlsx")])
 
@@ -379,10 +379,10 @@ def load_excel_file():
             process_list.append(row.to_list())
 
         print(process_list)
-        total_whole_circle_counter = len(process_list)
-        print(total_whole_circle_counter)
-        whole_circle_counter=0
-        print(total_whole_circle_counter)
+        total_camera_up_down_counter = len(process_list)
+        print(total_camera_up_down_counter)
+        camera_up_down_counter=0
+        print(total_camera_up_down_counter)
 
         canvas2.itemconfig(file_label, text=path.name, fill="white")
         excel_process=True
@@ -392,7 +392,7 @@ def load_excel_file():
         print("no")
 
 def reload_excel():
-    global workbook,total_whole_circle_counter,excel_process,whole_circle_counter,path,process_list
+    global workbook,total_camera_up_down_counter,excel_process,camera_up_down_counter,path,process_list
     try:
 
         process_list=[]
@@ -400,22 +400,22 @@ def reload_excel():
         for index, row in df.iterrows():
             process_list.append(row.to_list())
         print(process_list)
-        total_whole_circle_counter = len(process_list)
-        whole_circle_counter = 0
-        print(total_whole_circle_counter)
+        total_camera_up_down_counter = len(process_list)
+        camera_up_down_counter = 0
+        print(total_camera_up_down_counter)
         insert_processing_list()
 
     except:
         print("no")
 
 def remove_excel_file():
-    global process_list,path,total_whole_circle_counter,circle_counter,total_circle,whole_circle_counter,auto_processing,processingc,processingr
+    global process_list,path,total_camera_up_down_counter,rotation_counter,total_circle,camera_up_down_counter,auto_processing,processingc,processingr
     print("remove")
     path=""
-    circle_counter = 0
+    rotation_counter = 0
     total_circle = 0
-    whole_circle_counter = 0
-    total_whole_circle_counter = 1
+    camera_up_down_counter = 0
+    total_camera_up_down_counter = 1
     process_list=[]
     auto_processing=False
     canvas2.itemconfig(file_label, text="", fill="white")
@@ -456,7 +456,7 @@ def ang_callback(input):
 
 
 def disable_wdiget():
-    global circle_counter
+    global rotation_counter
     canvas1.itemconfig(status_label, text="進行中", fill="red")
     angle_num.config(state=DISABLED)
     auto_angle_num.config(state=DISABLED)
@@ -478,7 +478,7 @@ def disable_wdiget():
 
     auto_angle_num.config(state=DISABLED)
     auto_height_num.config(state=DISABLED)
-    auto_angle_separate.config(state=DISABLED)
+
     image_name.config(state=DISABLED)
     camera_setting_btn.config(state=DISABLED)
     get_camera_setting.config(state=DISABLED)
@@ -487,9 +487,9 @@ def disable_wdiget():
 
     if auto_processing==True:
         auto_angle_separate.config(state=NORMAL)
-        canvas2.itemconfig(remain_speerate_circle, text=str(circle_counter)+"/"+str(int(auto_angle_separate.get())), fill="white")
+        canvas2.itemconfig(remain_speerate_circle, text=str(rotation_counter) + "/" + str(int(auto_angle_separate.get())), fill="white")
         canvas2.itemconfig(auto_status_label, text="進行中", fill="red")
-        canvas2.itemconfig(remain_circle, text=str(whole_circle_counter) + "/" + str(total_whole_circle_counter),
+        canvas2.itemconfig(remain_circle, text=str(camera_up_down_counter) + "/" + str(total_camera_up_down_counter),
                            fill="white")
         auto_angle_separate.config(state=DISABLED)
 
@@ -526,10 +526,10 @@ def enable_wdiget():
                        fill="white")
     canvas2.itemconfig(auto_status_label, text="空置中", fill="green")
     try:
-        canvas2.itemconfig(remain_speerate_circle, text=str(circle_counter) + "/" + str(int(auto_angle_separate.get())),
-                       fill="white")
-        canvas2.itemconfig(remain_circle, text=str(whole_circle_counter) + "/" + str(total_whole_circle_counter),
-                       fill="white")
+        canvas2.itemconfig(remain_speerate_circle, text=str(rotation_counter) + "/" + str(int(auto_angle_separate.get())),
+                           fill="white")
+        canvas2.itemconfig(remain_circle, text=str(camera_up_down_counter) + "/" + str(total_camera_up_down_counter),
+                           fill="white")
     except:
         print("OK")
 def camera_setting_transmit():
@@ -612,7 +612,7 @@ def initial_camera_data():
 
 
 def take_photo():
-    global camera_path,auto_seperate_num_aj,whole_circle_counter,auto_processing,auto_seperate_num_aj,image_photo_sd_path
+    global camera_path,auto_seperate_num_aj,camera_up_down_counter,auto_processing,auto_seperate_num_aj,image_photo_sd_path
     photo_response=""
     download_counter=0
     print("take")
@@ -687,7 +687,7 @@ def load_photo_path():
 
 
 def process_rundown():
-    global ser, uart_receive, processingc, processingr, circle_counter, camera_fixed, auto_processing, whole_circle_counter, total_whole_circle_counter, excel_process,waiting_camera_response,waiting_rotation_response,waiting_camera_counter
+    global ser, uart_receive, processingc, processingr, rotation_counter, camera_fixed, auto_processing, camera_up_down_counter, total_camera_up_down_counter, excel_process,waiting_camera_response,waiting_rotation_response,waiting_camera_counter
     if True:
         print("waiting")
         if uart_receive != "":
@@ -699,24 +699,24 @@ def process_rundown():
 
                 if auto_processing==True:
                     print("auto_start")
-                    if whole_circle_counter < total_whole_circle_counter:
+                    if camera_up_down_counter < total_camera_up_down_counter:
                         camera_fixed=True
-                        #take_photo()
-                        time.sleep(1)
+                        take_photo()
+
                         print("taking photo.......")
-                        whole_circle_counter = whole_circle_counter + 1
-                        if whole_circle_counter <total_whole_circle_counter:
+                        camera_up_down_counter = camera_up_down_counter + 1
+                        if camera_up_down_counter <total_camera_up_down_counter:
                             insert_processing_list()
                             start_auto_transmit()
 
 
-                        elif circle_counter < int(auto_angle_separate.get())-1:
-                            circle_counter = circle_counter + 1
+                        elif rotation_counter < int(auto_angle_separate.get())-1:
+                            rotation_counter = rotation_counter + 1
                             fiexed_camera_auto_transmit()
                         else:
                             auto_processing=False
-                            whole_circle_counter=0
-                            circle_counter=0
+                            camera_up_down_counter=0
+                            rotation_counter=0
                             reload_excel()
 
 
@@ -732,7 +732,7 @@ def process_rundown():
                 if auto_processing!= True:
                     processingr = False
                 else:
-                    whole_circle_counter = 0
+                    camera_up_down_counter = 0
                     if len(process_list)>0:
                         insert_processing_list()
                     start_auto_transmit()
@@ -752,7 +752,7 @@ def process_rundown():
         None
 
 def mylog():
-    global ser ,uart_receive , processingc,processingr ,circle_counter,camera_fixed,auto_processing,whole_circle_counter,total_whole_circle_counter,excel_process,waiting_rotation_counter,waiting_camera_counter
+    global ser ,uart_receive , processingc,processingr ,rotation_counter,camera_fixed,auto_processing,camera_up_down_counter,total_camera_up_down_counter,excel_process,waiting_rotation_counter,waiting_camera_counter,waiting_camera_response,waiting_rotation_response
     #print("reading")
 
     while ser.inWaiting():  # Or: while ser.inWaiting():
@@ -763,23 +763,34 @@ def mylog():
         if uart_receive!="":
             process_rundown()
 
-    if waiting_rotation_response==True:
-        waiting_rotation_counter=waiting_rotation_counter+1
-        print("counter R = ")
-        print(waiting_rotation_counter)
-    else:
-        waiting_rotation_counter=0
-    if waiting_camera_response==True:
+
+
+    if waiting_camera_response==True and auto_processing==True:
         waiting_camera_counter=waiting_camera_counter+1
         print("counter C = ")
         print(waiting_camera_counter)
+        if waiting_camera_counter % 10==0:
+            start_auto_transmit()
     else:
         waiting_camera_counter=0
 
 
 
-    if waiting_camera_counter>=100:
-        uart_receive='c'
+
+
+
+
+
+
+
+    if waiting_camera_counter>=200 :
+        auto_processing=False
+        camera_up_down_counter = 0
+        rotation_counter = 0
+        waiting_camera_response=False
+
+        messagebox.showinfo("錯誤", "接收端接收失敗")
+        reload_excel()
         process_rundown()
 
 
