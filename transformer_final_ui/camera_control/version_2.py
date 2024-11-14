@@ -427,13 +427,13 @@ def remove_excel_file():
 
 def callback(input):
 
-    if input.isdigit() and int(input)<=90  or input =="" :
+    if input.isdigit() and int(input)<=34  or input =="" :
 
         return True
     elif input[0]=="-":
         if len(input)==1:
             return True
-        elif len(input)>1 and int(input)>=-90 :
+        elif len(input)>1 and int(input)>=-34 :
             return True
         else:
             return False
@@ -449,7 +449,7 @@ def height_callback(input):
 
 
 def ang_callback(input):
-    if input.isdigit() and int(input) <=360 or input =="":
+    if input.isdigit() and int(input) <360 or input =="":
         return True
     else:
         return False
@@ -612,7 +612,7 @@ def initial_camera_data():
 
 
 def take_photo():
-    global camera_path,auto_seperate_num_aj,camera_up_down_counter,auto_processing,auto_seperate_num_aj,image_photo_sd_path
+    global camera_path,auto_seperate_num_aj,camera_up_down_counter,auto_processing,auto_seperate_num_aj,image_photo_sd_path,rotation_counter
     photo_response=""
     download_counter=0
     print("take")
@@ -628,10 +628,15 @@ def take_photo():
 
     try:
         if camera_path=="":
-            messagebox.showinfo("錯誤", "沒有選擇相機路徑")
             auto_processing = False
+            camera_up_down_counter = total_camera_up_down_counter
+            rotation_counter=int(auto_angle_separate.get()) - 1
+            messagebox.showinfo("錯誤", "沒有選擇相機路徑")
+
+
         else:
             af_data= {"af":True}
+
             jsondata = json.dumps(af_data)
 
             taking_response =requests.post(camera_base_url+"shooting/control/shutterbutton",data=jsondata)
@@ -656,13 +661,16 @@ def take_photo():
 
 
 
-            download_photo = requests.get(photo_response.json()['url'][0], stream=True)
-            if (photo_response.status_code==200):
+                download_photo = requests.get(photo_response.json()['url'][0], stream=True)
+                if (photo_response.status_code==200):
 
-                with open(str(camera_path)+"\\"+str(photo_name)+'.jpg','wb') as out_file:
-                    shutil.copyfileobj(download_photo.raw,out_file)
-                print(photo_response.json()['url'][0])
-            del_response =  requests.delete(photo_response.json()['url'][0])
+                    with open(str(camera_path)+"\\"+str(photo_name)+'.jpg','wb') as out_file:
+                        shutil.copyfileobj(download_photo.raw,out_file)
+                    print(photo_response.json()['url'][0])
+                del_response =  requests.delete(photo_response.json()['url'][0])
+            else:
+                messagebox.showinfo("錯誤", "拍攝圖片"+str(photo_name)+"失敗")
+
     except Exception as error:
         messagebox.showinfo("錯誤", error)
 
@@ -679,8 +687,9 @@ def load_photo_path():
     try:
         temp_camera_path = filedialog.askdirectory()
 
-        camera_path = Path(temp_camera_path)
-        print(camera_path.name)
+        camera_path = str(Path(temp_camera_path))
+
+
         canvas3.itemconfig(camera_label, text=camera_path, fill="black")
     except:
         print("no")
@@ -898,7 +907,7 @@ photo_path = Button(root, width=10, height=2, bg='gray',fg='white', text='路徑
 photo_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='進行拍攝', command=take_photo)
 
 camera_setting_btn = Button(root, width=10, height=2, bg='gray',fg='white', text='相機參數發送', command=camera_setting_transmit)
-get_camera_setting = Button(root, width=10, height=2, bg='gray',fg='white', text='獲取相機數值', command=initial_camera_data)
+get_camera_setting = Button(root, width=10, height=2, bg='gray',fg='white', text='連接相機', command=initial_camera_data)
 
 AV_combo = ttk.Combobox(root,width=8,value=AV_value,state="readonly")
 AV_combo.current(1)
@@ -938,7 +947,7 @@ canvas1.create_text(180,90,text="毫米",fill="white" ,font=('Helvetica 15 bold'
 
 canvas1.create_text(190,250,text="度",fill="white" ,font=('Helvetica 15 bold'))
 canvas1.create_text(160,280,text="範圍(0~359)",fill="red" ,font=('Helvetica 10 bold'))
-canvas1.create_text(40,120,text="範圍(-90~90)",fill="red" ,font=('Helvetica 10 bold'))
+canvas1.create_text(40,120,text="範圍(-34~34)",fill="red" ,font=('Helvetica 10 bold'))
 canvas1.create_text(140,120,text="範圍(0~3000)",fill="red" ,font=('Helvetica 10 bold'))
 canvas1.create_text(65,250,text="旋轉角度:",fill="white" ,font=('Helvetica 12 bold'))
 
